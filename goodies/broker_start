@@ -1,0 +1,5 @@
+#!/bin/bash
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+echo "Starting mosquitto broker..."
+docker run -d --name mosquitto --rm -p1883:1883 -v"${SCRIPT_DIR}/mosquitto.conf:/mosquitto/config/mosquitto.conf" eclipse-mosquitto
+echo "Done."
