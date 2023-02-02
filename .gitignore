@@ -1,28 +1,30 @@
 # Files to be ignored when using git
+
+# temporary files
 *.o
 *.a
-*.slxc
-/*.csv
 slprj/
+*.slxc
+*.dSYM
+
+# OS generated files
+.DS_Store
+
+# Output and log files
+/*.csv
+log*.txt
+
+# Visual Studio Code
+.vscode
+
+# examples directory
 /examples/*
 !/examples/*.md
 !/examples/src
 !/examples/include
+
+# Cmake build directory and generated files
 /*build*
 /src/defines.h
-/arm*
-/bin/*
-/lib/*
-.vscode
-log*.txt
-/bb/
-
 /products*/*
 !/products*/.gitkeep
-*.dSYM
-.DS_Store
-
-/MATLAB/mqtt_pub.m
-/MATLAB/mqtt_sub.m
-/MATLAB/simple_axis_3.slx
-/MATLAB/simple_axis_data.m

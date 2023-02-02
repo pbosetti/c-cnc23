@@ -1,5 +1,4 @@
 # C-CNC 2023
-[![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/pbosetti/c-cnc.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/pbosetti/c-cnc/context:cpp)
 
 This is the repository of the code developed during the _Digital Manufacturing_ course, academic year 2022-23, Department of Industrial Engineering, University of Trento.
 
