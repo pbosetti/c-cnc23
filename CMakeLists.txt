@@ -57,7 +57,6 @@ endif()
 # FILES
 # expect all sources in /src, except mains
 set(SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/src)
-file(GLOB LIB_SOURCES_CPP "${SOURCE_DIR}/[^_]*.cpp")
 file(GLOB LIB_SOURCES "${SOURCE_DIR}/[^_]*.c")
 # generate defines.h
 configure_file(
@@ -76,8 +75,10 @@ configure_file(
 add_executable(hello ${SOURCE_DIR}/main/hello.c)
 
 # Libraries
+add_library(c-cnc SHARED ${LIB_SOURCES})
 
-
+# Linking
+target_link_libraries(hello c-cnc)
 
 
 #   _____           _        _ _ 
@@ -89,6 +90,7 @@ add_executable(hello ${SOURCE_DIR}/main/hello.c)
 # List of targets to install
 list(APPEND TARGETS_LIST
   hello
+  c-cnc
 )
 # Destination directory
 set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_LIST_DIR}/products)
