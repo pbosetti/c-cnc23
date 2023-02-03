@@ -9,19 +9,13 @@ cmake_minimum_required(VERSION 3.10)
 #  |_|   |_|  \___|_|_|_| |_| |_|_|_| |_|\__,_|_|   \__, |
 #                                                    __/ |
 #                                                   |___/ 
-if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
+if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
   message(FATAL_ERROR "In-source builds not allowed! Create a build directory and run CMake from there.")
 endif()
 # This is dynamically updated in defines.h.in:
 set(VERSION "1.0")
 project(C-CNC VERSION ${VERSION} LANGUAGES C CXX)
 
-#   ____       _   _   _                 
-#  / ___|  ___| |_| |_(_)_ __   __ _ ___ 
-#  \___ \ / _ \ __| __| | '_ \ / _` / __|
-#   ___) |  __/ |_| |_| | | | | (_| \__ \
-#  |____/ \___|\__|\__|_|_| |_|\__, |___/
-#                              |___/     
 
 #   ____        _ _     _            _   _   _                 
 #  | __ ) _   _(_) | __| |  ___  ___| |_| |_(_)_ __   __ _ ___ 
@@ -35,10 +29,10 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
   message(STATUS "Debug mode, enabling all warnings")
-  add_compile_options(-Wall -Wno-comment)
+  add_compile_options(-Wall)
 endif()
 # Compiler flags
-add_compile_options(-fPIC -D_GNU_SOURCE -Wno-backslash-newline-escape)
+add_compile_options(-fPIC -D_GNU_SOURCE -Wno-backslash-newline-escape -Wno-comment)
 # Language Standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
@@ -49,7 +43,7 @@ set(CMAKE_C_STANDARD_REQUIRED TRUE)
 # So that it can find the library across installations
 # If this is not given, the executable only searches the library in its same 
 # folder or in a system path (/usr/lib, /usr/local/lib)
-if (APPLE)
+if(APPLE)
   set(CMAKE_INSTALL_RPATH "@executable_path/../lib")
 else()
   set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib;/usr/local/lib")
@@ -75,7 +69,9 @@ configure_file(
 add_executable(hello ${SOURCE_DIR}/main/hello.c)
 
 # Libraries
+# All files in /src (except src/main) are compiled into a library
 add_library(c-cnc SHARED ${LIB_SOURCES})
+add_library(c-cnc_static STATIC ${LIB_SOURCES})
 
 # Linking
 target_link_libraries(hello c-cnc)
@@ -90,7 +86,7 @@ target_link_libraries(hello c-cnc)
 # List of targets to install
 list(APPEND TARGETS_LIST
   hello
-  c-cnc
+  c-cnc c-cnc_static
 )
 # Destination directory
 set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_LIST_DIR}/products)
