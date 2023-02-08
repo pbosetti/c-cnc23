@@ -67,6 +67,7 @@ configure_file(
 #                 |___/              
 # Executables
 add_executable(hello ${SOURCE_DIR}/main/hello.c)
+add_executable(ini_parse ${SOURCE_DIR}/main/ini_parse.c)
 
 # Libraries
 # All files in /src (except src/main) are compiled into a library
@@ -75,6 +76,7 @@ add_library(c-cnc_static STATIC ${LIB_SOURCES})
 
 # Linking
 target_link_libraries(hello c-cnc)
+target_link_libraries(ini_parse c-cnc)
 
 
 #   _____           _        _ _ 
@@ -86,6 +88,7 @@ target_link_libraries(hello c-cnc)
 # List of targets to install
 list(APPEND TARGETS_LIST
   hello
+  ini_parse
   c-cnc c-cnc_static
 )
 # Destination directory
