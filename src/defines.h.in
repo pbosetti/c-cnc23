@@ -17,10 +17,6 @@
 // COMMON TYPES
 typedef double data_t;
 
-
-// COMMON INLINE FUNCTIONS
-
-
 //    ____      _                
 //   / ___|___ | | ___  _ __ ___ 
 //  | |   / _ \| |/ _ \| '__/ __|
@@ -104,6 +100,15 @@ typedef double data_t;
 #define CRESET "\e[0m"
 #define COLOR_RESET "\e[0m"
 
+
+// COMMON INLINE FUNCTIONS
+static inline void error(const char *msg, const char *desc) {
+  fprintf(stderr, BRED "*** ERROR: %s - %s\n" CRESET, msg, desc? desc : "");
+}
+
+static inline void warning(const char *msg, const char *desc) {
+  fprintf(stderr, BYEL "*** WARNING: %s - %s\n" CRESET, msg, desc? desc : "");
+}
 
 
 #endif // DEFINES_H
