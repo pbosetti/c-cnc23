@@ -136,7 +136,7 @@ void machine_free(machine_t *m) {
   free(m);
 }
 
-// Accessors
+// MARK: Accessors
 
 // Methods
 
@@ -152,7 +152,14 @@ void machine_print_params(machine_t *m) {
   printf(BBLK "C-CNC:rt_pacing:  " CRESET "%f\n", m->rt_pacing);
 }
 
+
 #ifdef MACHINE_MAIN
+//   _____         _   _             
+//  |_   _|__  ___| |_(_)_ __   __ _ 
+//    | |/ _ \/ __| __| | '_ \ / _` |
+//    | |  __/\__ \ |_| | | | | (_| |
+//    |_|\___||___/\__|_|_| |_|\__, |
+// Only for testing local file |___/ 
 
 int main(int argc, const char **argv) {
   machine_t *m = machine_new(argv[1]);
