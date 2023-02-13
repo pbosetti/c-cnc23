@@ -17,12 +17,6 @@ log*.txt
 # Visual Studio Code
 .vscode
 
-# examples directory
-/examples/*
-!/examples/*.md
-!/examples/src
-!/examples/include
-
 # Cmake build directory and generated files
 /*build*
 /src/defines.h

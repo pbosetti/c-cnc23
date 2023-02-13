@@ -12,9 +12,9 @@
 					"type": "lldb",
 					"request": "launch",
 					"name": "hello",
-					"program": "${workspaceFolder}/products/bin/hello",
+					"program": "${workspaceFolder}/examples/build/hello",
 					"args": [],
-					"cwd": "${workspaceFolder}"
+					"cwd": "${workspaceFolder}/examples"
 				}
 			],
 			"compounds": []
