@@ -29,7 +29,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
   message(STATUS "Debug mode, enabling all warnings")
-  add_compile_options(-Wall)
+  add_compile_options(-Wall -DDEBUG)
 endif()
 # Compiler flags
 add_compile_options(-fPIC -D_GNU_SOURCE -Wno-backslash-newline-escape -Wno-comment)
