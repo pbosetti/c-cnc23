@@ -49,7 +49,7 @@ machine_t *machine_new(const char *ini_path) {
 
   m = malloc(sizeof(machine_t));
   if (!m) {
-    error("malloc", NULL);
+    eprintf("malloc");
     return NULL;
   }
   memset(m, 0, sizeof(machine_t));
@@ -65,41 +65,41 @@ machine_t *machine_new(const char *ini_path) {
 
   ini_file = fopen(ini_path, "r");
   if (!ini_file) {
-    error("fopen", strerror(errno));
+    eprintf("fopen: %s", strerror(errno));
     goto fail;
   }
   conf = toml_parse_file(ini_file, errbuf, BUFLEN);
   fclose(ini_file);
   if (!conf) {
-    error("Parsing INI file", errbuf);
+    eprintf("Parsing INI file: %s", errbuf);
     goto fail;
   }
 
 // macros for reading and storing INI values
-#define TREAD_I(d, m, v, k, f)                                                 \
-  d = toml_int_in(v, #k);                                                      \
+#define TREAD_I(d, m, tab, key, sec)                                           \
+  d = toml_int_in(tab, #key);                                                  \
   if (!d.ok)                                                                   \
-    warning("Missing " #f ":" #k, NULL);                                       \
+    wprintf("Missing %s:%s", #sec, #key);                                      \
   else                                                                         \
-    m->k = d.u.i;
-#define TREAD_D(d, m, v, k, f)                                                 \
-  d = toml_double_in(v, #k);                                                   \
+    m->key = d.u.i;
+#define TREAD_D(d, m, tab, key, sec)                                           \
+  d = toml_double_in(tab, #key);                                               \
   if (!d.ok)                                                                   \
-    warning("Missing " #f ":" #k, NULL);                                       \
+    wprintf("Missing %s:%s", #sec, #key);                                      \
   else                                                                         \
-    m->k = d.u.d;
-#define TREAD_S(d, m, v, k, f)                                                 \
-  d = toml_string_in(v, #k);                                                   \
+    m->key = d.u.d;
+#define TREAD_S(d, m, tab, key, sec)                                           \
+  d = toml_string_in(tab, #key);                                               \
   if (!d.ok)                                                                   \
-    warning("Missing " #f ":" #k, NULL);                                       \
+    wprintf("Missing %s:%s", #sec, #key);                                      \
   else                                                                         \
-    strncpy(m->k, d.u.s, sizeof(m->k));
+    strncpy(m->key, d.u.s, sizeof(m->key));
 
   { // Section MQTT
     toml_datum_t d;
     toml_table_t *mqtt = toml_table_in(conf, "MQTT");
     if (!mqtt) {
-      error("Missing MQTT section", NULL);
+      eprintf("Missing MQTT section");
       goto fail;
     }
     // Values should be read like this:
@@ -107,22 +107,22 @@ machine_t *machine_new(const char *ini_path) {
     // if (!d.ok) error("Missing MQTT:broker_addr", NULL);
     // else strncpy(m->broker_addr, d.u.s, sizeof(m->broker_addr));
     // To make this DRY, we use macros (see above)
-    TREAD_S(d, m, mqtt, broker_addr, MQTT);
-    TREAD_I(d, m, mqtt, broker_port, MQTT);
-    TREAD_S(d, m, mqtt, sub_topic, MQTT);
-    TREAD_S(d, m, mqtt, pub_topic, MQTT);
+    TREAD_S(d, m, mqtt, broker_addr, "MQTT");
+    TREAD_I(d, m, mqtt, broker_port, "MQTT");
+    TREAD_S(d, m, mqtt, sub_topic, "MQTT");
+    TREAD_S(d, m, mqtt, pub_topic, "MQTT");
   }
   { // Section C-CNC
     toml_datum_t d;
     toml_table_t *ccnc = toml_table_in(conf, "C-CNC");
     if (!ccnc) {
-      error("Missing C-CNC section", NULL);
+      eprintf("Missing C-CNC section");
       goto fail;
     }
-    TREAD_D(d, m, ccnc, A, C - CNC);
-    TREAD_D(d, m, ccnc, max_error, C - CNC);
-    TREAD_D(d, m, ccnc, tq, C - CNC);
-    TREAD_D(d, m, ccnc, rt_pacing, C - CNC);
+    TREAD_D(d, m, ccnc, A, "C-CNC");
+    TREAD_D(d, m, ccnc, max_error, "C-CNC");
+    TREAD_D(d, m, ccnc, tq, "C-CNC");
+    TREAD_D(d, m, ccnc, rt_pacing, "C-CNC");
   }
   return m;
 
@@ -152,14 +152,13 @@ void machine_print_params(machine_t *m) {
   printf(BBLK "C-CNC:rt_pacing:  " CRESET "%f\n", m->rt_pacing);
 }
 
-
 #ifdef MACHINE_MAIN
-//   _____         _   _             
-//  |_   _|__  ___| |_(_)_ __   __ _ 
+//   _____         _   _
+//  |_   _|__  ___| |_(_)_ __   __ _
 //    | |/ _ \/ __| __| | '_ \ / _` |
 //    | |  __/\__ \ |_| | | | | (_| |
 //    |_|\___||___/\__|_|_| |_|\__, |
-// Only for testing local file |___/ 
+// Only for testing local file |___/
 
 int main(int argc, const char **argv) {
   machine_t *m = machine_new(argv[1]);

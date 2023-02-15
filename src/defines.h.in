@@ -102,13 +102,30 @@ typedef double data_t;
 
 
 // COMMON INLINE FUNCTIONS
-static inline void error(const char *msg, const char *desc) {
-  fprintf(stderr, BRED "*** ERROR: %s - %s\n" CRESET, msg, desc? desc : "");
+
+// Define support functions for error or warning messages
+// functions defined in a header shall be static
+#include <stdarg.h>
+static inline void error(const char *msg, ...) { // ... means many more args
+  va_list args;
+  va_start(args, msg); // reads the list of args after msg into args
+  fprintf(stderr, BRED "*** ERROR: ");
+  vfprintf(stderr, msg, args); // vprintf family functions accept va_list
+  fprintf(stderr, CRESET "\n");
+  va_end(args);
 }
 
-static inline void warning(const char *msg, const char *desc) {
-  fprintf(stderr, BYEL "*** WARNING: %s - %s\n" CRESET, msg, desc? desc : "");
-}
+static inline void warning(const char *msg, ...) {
+  va_list args;
+  va_start(args, msg);
+  fprintf(stderr, BYEL "*** WARNING: ");
+  vfprintf(stderr, msg, args);
+  fprintf(stderr, CRESET "\n");
+  va_end(args);}
 
+// Or a macro functions
+#define eprintf(m, ...) fprintf(stderr, BRED "*** ERROR: " m "\n" CRESET __VA_OPT__(,)__VA_ARGS__)
+
+#define wprintf(m, ...) fprintf(stderr, BYEL "*** WARNING: " m "" CRESET "\n" __VA_OPT__(,)__VA_ARGS__)
 
 #endif // DEFINES_H
