@@ -1,5 +1,8 @@
 # C-CNC 2023
-![CMake build](https://github.com/pbosetti/c-cnc23/actions/workflows/cmake.yml/badge.svg)
+
+*Branch main:* ![CMake build](https://github.com/pbosetti/c-cnc23/actions/workflows/cmake.yml/badge.svg?branch=main)
+*Branch devel:* ![CMake build](https://github.com/pbosetti/c-cnc23/actions/workflows/cmake.yml/badge.svg?branch=devel)
+
 
 This is the repository of the code developed during the _Digital Manufacturing_ course, academic year 2022-23, Department of Industrial Engineering, University of Trento.
 
