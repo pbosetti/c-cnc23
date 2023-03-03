@@ -41,7 +41,6 @@ typedef struct machine {
 
 // Lifecycle
 machine_t *machine_new(const char *ini_path) {
-  assert(ini_path);
   FILE *ini_file = NULL;
   char errbuf[BUFLEN];
   machine_t *m = NULL;
