@@ -98,3 +98,13 @@ install(TARGETS ${TARGETS_LIST}
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib/static
 )
+
+
+#   _____         _   
+#  |_   _|__  ___| |_ 
+#    | |/ _ \/ __| __|
+#    | |  __/\__ \ |_ 
+#    |_|\___||___/\__|
+include(CTest)
+add_test(NAME hello COMMAND hello)
+set_property(TEST hello PROPERTY PASS_REGULAR_EXPRESSION "^Hello")
