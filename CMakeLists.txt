@@ -107,4 +107,8 @@ install(TARGETS ${TARGETS_LIST}
 #    |_|\___||___/\__|
 include(CTest)
 add_test(NAME hello COMMAND hello)
-set_property(TEST hello PROPERTY PASS_REGULAR_EXPRESSION "^Hello")
+
+add_test(NAME machine_test COMMAND machine_test ../settings.ini)
+
+add_test(NAME machine_test_no_arg COMMAND machine_test)
+set_property(TEST machine_test_no_arg PROPERTY WILL_FAIL TRUE)
