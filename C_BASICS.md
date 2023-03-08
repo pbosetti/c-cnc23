@@ -2,15 +2,18 @@
 
 # Compilation
 
-Here is a list of the most commonly used switches of the `clang` command for compiling simple programs (for more complex ones, use cmake and make):
+Here is a list of the most commonly used switches of the `clang` command for
+compiling simple programs (for more complex ones, use cmake and make):
 
 * `-o filename`: specify the name of the executable file to be created
 * `-g`: generate a debuggable executable
 * `-Ipath`: specify the folder where to search for headers
 * `-Lpath`: specify the folder where to search for non-system libraries
-* `-llibname`: link to the library named `libname`, e.g `-lm` for linking to the math library (whose name is `m`)
+* `-llibname`: link to the library named `libname`, e.g `-lm` for linking to the
+  math library (whose name is `m`)
 
-Apart these flags, you must also provide the list of source files to be compiled (separated by spaces).
+Apart these flags, you must also provide the list of source files to be compiled
+(separated by spaces).
 
 # Pointers
 
