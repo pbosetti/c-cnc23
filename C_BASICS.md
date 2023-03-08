@@ -23,7 +23,7 @@ Pointers are *declared* by prepending a `*` to their name:
 double *val;
 ```
 
-To deal with pointers and memory addresses there are to operators: the
+To deal with pointers and memory addresses there are two operators: the
 *reference* operator `&` (which returns the address of a variable) and the
 *dereference* operator `*` (which returns the content of a pointer). So you can
 assign the address of a variable to a pointer like this: 
@@ -74,7 +74,7 @@ on](#quick-initialization) for further information on this.
 
 The last two lines are an example of **pointer arithmetics**: incrementng or
 decrementing a pointer allows to read memory contents at a given offset from the
-original pointer. As a matter of fact, `ary[n]` and `ary + n` are exactly the
+original pointer. As a matter of fact, `ary[n]` and `*(ary + n)` are exactly the
 same thing, just with different syntax.
 
 ## When to use stack or heap declared arrays
@@ -84,18 +84,18 @@ There are two reasons for selecting stack or heap declarations:
 1. array size
 2. array scope
 
-**Array size**: the stack is property of the function where the array is
-declared, and it has a limited size (typically about 8 Mb per function), but it
-is a faster memory. Conversely, the heap capacity is only limited by the system
-total memory, but it is slower. So small arrays are beter declared on the stack,
+**Array size**: the stack is owned by the function where the array is declared,
+and it has a limited size (typically about 8 Mb per function), but it is a
+faster memory. Conversely, the heap capacity is only limited by the system total
+memory, but it is slower. So small arrays are better declared on the stack,
 while large arrays have to be declared on the heap. Moreover, a stack array is
-*static*: you cannot change its size after declaration. Conversely, an heap
-array is *dynamic* and can be reallocated to a bigger (or smaller) size if
-needed.
+*static*: you cannot change its size after declaration. Conversely, a heap array
+is *dynamic* and can be reallocated to a bigger (or smaller) size if needed.
 
 **Array scope**: stack array only live in the stack, which is deleted upon
-function exit. So if you need to pass an array to other functions you have to
-declare it on the heap.
+function exit. Conversely, a heap array is available everywhere, as long as you
+have a *handle* on it, i.e., a pointer to its location So if you need to pass an
+array to other functions you have to declare it on the heap.
 
 # Custom types and Compound types
 
@@ -124,8 +124,8 @@ uint16_t a; // unsigned 16 bit integer
 int32_t b;  // signed 32 bit integer
 ```
 
-Unlike native types (as `long int`) whose actual nit size depends on the
-architecture, those derived types always have the given, platform independent
+Unlike native types (as `long int`), whose actual size depends on the
+architecture, those derived types always have the given, platform-independent
 size.
 
 ## Compound types
@@ -235,7 +235,7 @@ As a rule of thumb:
 
 # Array of structs
 
-In C it is possible to create array of every possible type, including structs:
+In C it is possible to create an array of any possible type, including structs:
 
 ```c
 typedef struct {
