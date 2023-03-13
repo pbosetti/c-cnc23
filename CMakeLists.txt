@@ -27,17 +27,20 @@ project(C-CNC VERSION ${VERSION} LANGUAGES C CXX)
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Build type default to Debug" FORCE)
 endif()
+# Compiler flags
+add_compile_options(
+  -fPIC 
+  -D_GNU_SOURCE 
+  -Wno-backslash-newline-escape 
+  -Wno-comment
+)
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
   message(STATUS "Debug mode, enabling all warnings")
   add_compile_options(-Wall -DDEBUG)
 endif()
-# Compiler flags
-add_compile_options(-fPIC -D_GNU_SOURCE -Wno-backslash-newline-escape -Wno-comment)
 # Language Standard
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_STANDARD_REQUIRED TRUE)
 # RPATH management
 # This embeds the relative path of the dynamic library into the executable
 # So that it can find the library across installations

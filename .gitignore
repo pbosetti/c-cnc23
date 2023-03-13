@@ -25,6 +25,5 @@ log*.txt
 
 # Cmake build directory and generated files
 /*build*
-/src/defines.h
 /products*/*
 !/products*/.gitkeep

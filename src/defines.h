@@ -100,10 +100,11 @@ typedef double data_t;
 #define BHWHT "\e[1;97m"
 
 //Reset
-#define reset "\e[0m"
 #define CRESET "\e[0m"
-#define COLOR_RESET "\e[0m"
 
+// MACRO FUNCTIONS
+#define eprintf(m, ...) fprintf(stderr, BRED "*** ERROR: " m CRESET, ##__VA_ARGS__)
 
+#define wprintf(m, ...) fprintf(stderr, BYEL "*** WARNING: " m "" CRESET, ##__VA_ARGS__)
 
 #endif // DEFINES_H
