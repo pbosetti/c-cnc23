@@ -56,10 +56,10 @@ endif()
 set(SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/src)
 file(GLOB LIB_SOURCES "${SOURCE_DIR}/[^_]*.c")
 # generate defines.h
-configure_file(
-  ${SOURCE_DIR}/defines.h.in
-  ${SOURCE_DIR}/defines.h
-)
+# configure_file(
+#   ${SOURCE_DIR}/defines.h.in
+#   ${SOURCE_DIR}/defines.h
+# )
 
 
 #   _____                    _       

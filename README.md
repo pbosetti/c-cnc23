@@ -29,6 +29,7 @@ code --install-extension canna.figlet
 code --install-extension Juancete.gcode-formatter
 code --install-extension vscode-gcode.gcode
 code --install-extension vadimcn.vscode-lldb
+code --install-extension fizzybreezy.gnuplot
 ```
 
 Also, you want to install the Fira Code font family, from <https://github.com/tonsky/FiraCode/releases/tag/6.2>. Download the file `FiraCode_6.2.zip`, unzip it and install the new font.

@@ -4,20 +4,19 @@
 			"path": "."
 		}
 	],
-	"settings": {
-		"launch": {
-			"version": "0.2.0",
-			"configurations": [
-				{
-					"type": "lldb",
-					"request": "launch",
-					"name": "hello",
-					"program": "${workspaceFolder}/products/bin/hello",
-					"args": [],
-					"cwd": "${workspaceFolder}"
-				}
-			],
-			"compounds": []
-		}
+	"launch": {
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"type": "lldb-vscode",
+				"request": "launch",
+				"name": "hello",
+				"program": "${workspaceRoot}/build/hello",
+				"args": [],
+				"env": [],
+				"cwd": "${workspaceRoot}"
+			}
+		],
+		"compounds": []
 	}
 }
