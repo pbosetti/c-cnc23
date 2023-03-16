@@ -18,6 +18,10 @@
 				}
 			],
 			"compounds": []
-		}
+		},
+		"C_Cpp.default.includePath": [
+			"${workspaceFolder}/examples/include",
+			"${workspaceFolder}/src"
+		]
 	}
 }

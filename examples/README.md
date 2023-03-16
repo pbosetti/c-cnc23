@@ -7,6 +7,11 @@
 
 ## Libraries
 
+Remember to also install these librraies:
+```sh
+sudo apt install libgsl-dev libatlas-base-dev liblapack-dev 
+```
+
 ### How to create a _static_ library
 
 First, compile all the C source files containing functions that you want to include in your library:
