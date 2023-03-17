@@ -30,6 +30,12 @@
 		"C_Cpp.default.includePath": [
 			"${workspaceFolder}/examples/include",
 			"${workspaceFolder}/src"
+		],
+		"C_Cpp.default.defines": [
+			"MACHINE_MAIN=1",
+			"POINT_MAIN=1",
+			"BLOCK_MAIN=1",
+			"PROGRAM_MAIN=1"
 		]
 	}
 }
