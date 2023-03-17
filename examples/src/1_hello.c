@@ -4,10 +4,10 @@
 //  |  _  |  __/ | | (_) |    \ V  V / (_) | |  | | (_| |_|
 //  |_| |_|\___|_|_|\___( )    \_/\_/ \___/|_|  |_|\__,_(_)
 //                      |/                                 
-// To create big text as above, in VSC select a line, type Ctrl-Shift-p and then
-// select "FIGlet: create ASCII art text": the selected text will become bigger.
-// Then, without changing the selection, type Ctrl-Shift-7 (italian keyboard)
-// and all the selectd lines get commented
+// To create big text as above, in VSC select a line, type Ctrl-Shift-p, type
+// "fig" and then select "FIGlet: create ASCII art text": the selected text will
+// become bigger. Then, without changing the selection, type Ctrl-Shift-7
+// (italian keyboard) and all the selectd lines get commented
 
 #include <stdio.h>
 #define GREET "Hello, World!"
