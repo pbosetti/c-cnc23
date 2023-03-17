@@ -11,8 +11,16 @@
 				{
 					"type": "lldb",
 					"request": "launch",
-					"name": "hello",
-					"program": "${workspaceFolder}/examples/build/hello",
+					"name": "2_basics",
+					"program": "${workspaceFolder}/examples/build/2_basics",
+					"args": ["7", "3"],
+					"cwd": "${workspaceFolder}/examples"
+				},
+				{
+					"type": "lldb",
+					"request": "launch",
+					"name": "7_linkedlist",
+					"program": "${workspaceFolder}/examples/build/7_linkedlist",
 					"args": [],
 					"cwd": "${workspaceFolder}/examples"
 				}
