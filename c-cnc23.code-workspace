@@ -1,41 +1,41 @@
 {
-	"folders": [
-		{
-			"path": "."
-		}
-	],
-	"settings": {
-		"launch": {
-			"version": "0.2.0",
-			"configurations": [
-				{
-					"type": "lldb",
-					"request": "launch",
-					"name": "2_basics",
-					"program": "${workspaceFolder}/examples/build/2_basics",
-					"args": ["7", "3"],
-					"cwd": "${workspaceFolder}/examples"
-				},
-				{
-					"type": "lldb",
-					"request": "launch",
-					"name": "7_linkedlist",
-					"program": "${workspaceFolder}/examples/build/7_linkedlist",
-					"args": [],
-					"cwd": "${workspaceFolder}/examples"
-				}
-			],
-			"compounds": []
-		},
-		"C_Cpp.default.includePath": [
-			"${workspaceFolder}/examples/include",
-			"${workspaceFolder}/src"
-		],
-		"C_Cpp.default.defines": [
-			"MACHINE_MAIN=1",
-			"POINT_MAIN=1",
-			"BLOCK_MAIN=1",
-			"PROGRAM_MAIN=1"
-		]
-	}
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "launch": {
+      "version": "0.2.0",
+      "configurations": [
+        {
+          "type": "lldb",
+          "request": "launch",
+          "name": "2_basics",
+          "program": "${workspaceFolder}/examples/build/2_basics",
+          "args": ["7", "3"],
+          "cwd": "${workspaceFolder}/examples"
+        },
+        {
+          "type": "lldb",
+          "request": "launch",
+          "name": "7_linkedlist",
+          "program": "${workspaceFolder}/examples/build/7_linkedlist",
+          "args": [],
+          "cwd": "${workspaceFolder}/examples"
+        }
+      ],
+      "compounds": []
+    },
+    "C_Cpp.default.includePath": [
+      "${workspaceFolder}/examples/include",
+      "${workspaceFolder}/src"
+    ],
+    "C_Cpp.default.defines": [
+      "MACHINE_MAIN=1",
+      "POINT_MAIN=1",
+      "BLOCK_MAIN=1",
+      "PROGRAM_MAIN=1"
+    ]
+  }
 }
