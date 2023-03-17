@@ -1,22 +1,22 @@
 {
-	"folders": [
-		{
-			"path": "."
-		}
-	],
-	"launch": {
-		"version": "0.2.0",
-		"configurations": [
-			{
-				"type": "lldb-vscode",
-				"request": "launch",
-				"name": "hello",
-				"program": "${workspaceRoot}/build/hello",
-				"args": [],
-				"env": [],
-				"cwd": "${workspaceRoot}"
-			}
-		],
-		"compounds": []
-	}
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "type": "lldb-vscode",
+        "request": "launch",
+        "name": "hello",
+        "program": "${workspaceRoot}/build/hello",
+        "args": [],
+        "env": [],
+        "cwd": "${workspaceRoot}"
+      }
+    ],
+    "compounds": []
+  }
 }
