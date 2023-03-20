@@ -157,5 +157,30 @@ int main(int argc, char const **argv) {
   // strings is an array of arrays, thus it is declared as a double pointer (as
   // in char const **argv argument of main).
 
+
+  //============================================================================
+  // HEXADECIMAL VALUES
+  //============================================================================
+  // Integer values may be printed as exadecimal values. This is often useful
+  // when debugging pointers or raw memory content. Keep in mind that a byte has
+  // a range of 256 values and thus it takes two digits in hex format:
+  printf("\nHEXADECIMAL VALUES\n");
+  printf("%1$d: 0x%1$02hhx\n", (unsigned char)10);
+  printf("%1$d: 0x%1$02hhx\n", (unsigned char)255);
+  printf("%1$d: 0x%1$02hhx\n", (unsigned char)-10);
+  // in the format specifier, 1$ means "parameter at position 1", 02 means
+  // "width 2, padding with zeros", hhx means "hexadecimal format, size 1/4
+  // (half-half) of a native int"
+  int i;
+  printf("my_string:\n");
+  printf("%12s: %02hhX", "ASCII values", my_string[0]);
+  for (i = 1; i < strlen(my_string); i++) {
+    printf("|%02hhX", my_string[i]);
+  }
+  printf("\n%12s: %2c", "characters", my_string[0]);
+  for (i = 1; i < strlen(my_string); i++) {
+    printf("|%2c", my_string[i]);
+  }
+  printf("\n");
   return 0;
 }
