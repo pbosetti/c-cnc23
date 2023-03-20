@@ -93,6 +93,9 @@ int main(int argc, char const **argv) {
   printf("my_ldouble: %Lf, size %lu\n", my_ldouble, sizeof(my_ldouble));
   printf("max: %Le, min: %Le, digits: %d, epsilon: %Le\n", LDBL_MAX, LDBL_MIN,
          LDBL_DIG, LDBL_EPSILON);
+  // NOTE: the C standard states that long double must be at least as capable as
+  // double. On MacOS, for example, long double has 8 bytes as double, while on
+  // Linux long double has 16 bytes and double has 8.
 
   // Problem: if you start using float for all variables and unsigned int for
   // all counters, and later on you realize that these types are insufficient,
