@@ -23,7 +23,7 @@ void *wait_thread(void *arg) {
   return NULL;
 }
 
-int main(int argc, char const *argv[]) {
+int main(int argc, char const **argv) {
   pthread_t pt1;
   double t0=0, t, dt;
   struct timespec ts;

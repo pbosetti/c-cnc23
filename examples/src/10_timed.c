@@ -58,7 +58,7 @@ uint64_t wait_next(uint64_t interval) {
 }
 
 
-int main(int argc, char const *argv[]) {
+int main(int argc, char const **argv) {
   double t0 = 0, t = 0, dt = 0;
   struct timespec ts;
   int rc, i = 0;

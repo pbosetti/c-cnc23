@@ -9,7 +9,7 @@
 
 // support function: it might be DEFINED here (before usage)
 // or rather DECLARED here and defined after the main() (after usage)
-void print_args(int argc, const char *argv[]) {
+void print_args(int argc, const char **argv) {
   printf("Number of args: #%i\n", argc);
   int i;
   for(i=0; i<argc; i++){
@@ -17,7 +17,7 @@ void print_args(int argc, const char *argv[]) {
   }
 }
 
-int main(int argc, const char *argv[]) {
+int main(int argc, const char **argv) {
   print_args(argc, argv);
 
   if(argc == 1) {

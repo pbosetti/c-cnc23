@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int main(int argc, char const *argv[]) {
+int main(int argc, char const **argv) {
   // DECLARATIONS
   // better put them at the beginning of code block 
   double factor[2];

@@ -66,7 +66,7 @@ int transform(point_t *point, double angle, point_t *delta) {
 }
 
 
-int main(int argc, char const *argv[]) {
+int main(int argc, char const **argv) {
   point_t pt = {.x=10, .y=0, .z=0};
   point_t d = {.x=10, .y=10, .z=5};
   double alpha = 45.0;

@@ -37,7 +37,7 @@ typedef enum errors error_t;
 // } error_t;
 
 
-int main(int argc, const char *argv[]) {
+int main(int argc, const char **argv) {
   error_t result = ERROR_SUCCESS;
   const char *filename;
 

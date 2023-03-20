@@ -21,7 +21,7 @@
 // an empty signal handler
 void handler(int signal) {}
 
-int main(int argc, char const *argv[]) {
+int main(int argc, char const **argv) {
   int i = 0;
   double t0 = 0, t = 0, dt = 0;
   struct itimerval itv;

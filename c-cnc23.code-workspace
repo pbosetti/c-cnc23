@@ -36,6 +36,12 @@
       "POINT_MAIN=1",
       "BLOCK_MAIN=1",
       "PROGRAM_MAIN=1"
-    ]
+    ],
+    "files.associations": {
+      "*.h": "c",
+      "*.rmd": "markdown",
+      "*.hh": "c++",
+      "__config": "c"
+    }
   }
 }
