@@ -144,15 +144,15 @@ int main(int argc, char const **argv) {
   // A string literal "string" implicitely includes the trailing null.
   // Char literals are delimited with single quotes ('a', '\n', '\0').
   printf("\nSTRINGS\n");
-  char my_string[128] = "Hello, World!";
+  char my_string[20] = "Hello, World!";
   unsigned char my_c = 'A';
   my_c++;
   printf("my_string: \"%s\", capacity: %lu, length: %lu\n", my_string,
          sizeof(my_string), strlen(my_string));
   // Note: strlen() does not count the trailing \0
   printf("my_c: '%c', ASCII value: %u\n", my_c, my_c);
-  // Remember: actual capacity must be equal to string lenth +1 (for the 
-  // trailing \0).
+  // Remember: actual capacity must be at least equal to string lenth +1 (for
+  // the trailing \0). 
   // Remember: an array in C is a pointer to its first element. So an array of
   // strings is an array of arrays, thus it is declared as a double pointer (as
   // in char const **argv argument of main).
@@ -172,14 +172,19 @@ int main(int argc, char const **argv) {
   // "width 2, padding with zeros", hhx means "hexadecimal format, size 1/4
   // (half-half) of a native int"
   int i;
-  printf("my_string:\n");
-  printf("%12s: %02hhX", "ASCII values", my_string[0]);
-  for (i = 1; i < strlen(my_string); i++) {
-    printf("|%02hhX", my_string[i]);
+  my_string[17] = 'X';
+  printf("%12s: \"%s\"\n", "my_string", my_string); // Note: 'X' is missing
+  printf("%12s: %2d", "position", 0);
+  for (i = 1; i < sizeof(my_string); i++) {
+    printf("|%2d", i);
   }
   printf("\n%12s: %2c", "characters", my_string[0]);
-  for (i = 1; i < strlen(my_string); i++) {
-    printf("|%2c", my_string[i]);
+  for (i = 1; i < sizeof(my_string); i++) {
+    printf("|%2c", my_string[i] ? my_string[i] : ' ');
+  }
+  printf("\n%12s: %02hhX", "ASCII values", my_string[0]);
+  for (i = 1; i < sizeof(my_string); i++) {
+    printf("|%02hhX", my_string[i]);
   }
   printf("\n");
   return 0;
