@@ -23,6 +23,14 @@
           "program": "${workspaceFolder}/examples/build/7_linkedlist",
           "args": [],
           "cwd": "${workspaceFolder}/examples"
+        },
+        {
+          "type": "lldb",
+          "request": "launch",
+          "name": "12_union",
+          "program": "${workspaceFolder}/examples/build/12_union",
+          "args": [],
+          "cwd": "${workspaceFolder}/examples"
         }
       ],
       "compounds": []
@@ -41,7 +49,9 @@
       "*.h": "c",
       "*.rmd": "markdown",
       "*.hh": "c++",
-      "__config": "c"
+      "__config": "c",
+      "cstdlib": "c",
+      "locale": "c"
     }
   }
 }
