@@ -262,4 +262,11 @@ int main() {
 // the new structure, all the integer fields shall be ntoh-ed. If you have an
 // array of integers, it must be ntoh-ed one element at a time.
 
+// Most desktop PCs (x86 Win and linux, x86 and silicon Macs) are little endian.
+// Some microcontrollers and Motorola chips are big endian. ARM chips are
+// bi-endian: they can select the endianness on boot. In most cases, little
+// endianness is selected by default. So, assuming that the world "speaks" LE is
+// a reasonably safe assumption, although it might bring to issues in some rare
+// cases.
+
 // This is left as an exercise to the reader.
