@@ -238,9 +238,9 @@ int main() {
 }
 
 // NOTE: there is one more gotcha in exchanging binary data among different
-// platforms. Some platform store (int16_t)18 as hex "1200", some as "0018". The
-// former are called BIG ENDIAN (MSD is at the end), the latter are called
-// LITTLE ENDIAN (LSD at the and).
+// platforms. Some platform store (int16_t)18 as hex "0012", some as "1200". The
+// former are called BIG ENDIAN (MSD is at the smallest memory address), the
+// latter are called LITTLE ENDIAN (LSD at the smallest memory address).
 
 // This only applies to int types with more than 8 bits. Floats and doubles
 // follow IEEE 754 on all platforms.
