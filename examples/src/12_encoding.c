@@ -120,7 +120,7 @@ void data_print(data_t *d) {
   size_t i = 0;
   if (!d)
     return;
-  printf("data \"%s\": (address 0x%p)\n", d->name, d);
+  printf("data \"%s\": (address %p)\n", d->name, d);
   printf("  id: %d, n: %d, value: %.3f\n", d->header.id, d->header.n,
          d->header.value);
   if (d->header.scores_len > 0) {
