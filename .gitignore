@@ -20,6 +20,7 @@ log*.txt
 
 # examples directory
 /examples/*
+!/examples/CMakeLists.txt
 !/examples/*.md
 !/examples/src
 !/examples/include
