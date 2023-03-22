@@ -25,7 +25,8 @@ int main() {
 //   clang -E examples/src/1_hello.c | code -
 // -E: means "preprocess only"
 // |: means pass the output (or "pipe") to the next command (code)
-// code -: means open a new feil with the output coming from previous command
+// code -: means open a new file in VSC with the output coming from previous
+// command
 //
 // This will open a temporary file with the source after preprocessor.
 // You may notice the whole stdio.h included at the begining, 
