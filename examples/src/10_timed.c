@@ -1,14 +1,13 @@
+//   _____ _                    _   _                     _____ 
+//  |_   _(_)_ __ ___   ___  __| | | | ___   ___  _ __   |___ / 
+//    | | | | '_ ` _ \ / _ \/ _` | | |/ _ \ / _ \| '_ \    |_ \ 
+//    | | | | | | | | |  __/ (_| | | | (_) | (_) | |_) |  ___) |
+//    |_| |_|_| |_| |_|\___|\__,_| |_|\___/ \___/| .__/  |____/ 
+//                                               |_|            
+// Explicit wait loop: more precise, but higher CPU load
 #include <stdint.h>
-#if defined(__linux)
-#define HAVE_POSIX_TIMER
 #include <time.h>
-#ifdef CLOCK_MONOTONIC
-#define CLOCKID CLOCK_MONOTONIC
-#else
-#define CLOCKID CLOCK_REALTIME
-#endif
-#elif defined(__APPLE__)
-#include <time.h>
+#ifdef __APPLE__
 #define HAVE_MACH_TIMER
 #include <mach/mach_time.h>
 #endif
@@ -17,7 +16,7 @@
 
 uint64_t now_ns() {
   static uint64_t is_init = 0;
-#if defined(__APPLE__)
+#ifdef __APPLE__
   static mach_timebase_info_data_t info;
   if (0 == is_init) {
     mach_timebase_info(&info);
@@ -28,15 +27,15 @@ uint64_t now_ns() {
   now *= info.numer;
   now /= info.denom;
   return now;
-#elif defined(__linux)
+#elif defined __linux__
   static struct timespec linux_rate;
   if (0 == is_init) {
-    clock_getres(CLOCKID, &linux_rate);
+    clock_getres(CLOCK_MONOTONIC, &linux_rate);
     is_init = 1;
   }
   uint64_t now;
   struct timespec spec;
-  clock_gettime(CLOCKID, &spec);
+  clock_gettime(CLOCK_MONOTONIC, &spec);
   now = spec.tv_sec * 1.0e9 + spec.tv_nsec;
   return now;
 #endif
