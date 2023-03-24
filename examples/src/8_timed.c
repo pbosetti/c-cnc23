@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include <unistd.h> // usleep
 #include <time.h>
+#include <sched.h>
+
 
 // Timing thread task
 // It simply sleeps for the required time. Given that creating a thread is
@@ -31,6 +33,14 @@ int main(int argc, char const **argv) {
   struct timespec ts;
   int rc, i;
   double mean = 0, sd = 0;
+  #ifdef __linux__
+  struct sched_param param = {.sched_priority = 80};
+  rc = sched_setscheduler(getpid(), SCHED_FIFO, &param);
+  if (rc) {
+    perror("Error (need sudo?): ");
+    exit(EXIT_FAILURE);
+  }
+  #endif
 
   // Get current time
   clock_gettime(CLOCK_MONOTONIC, &ts);

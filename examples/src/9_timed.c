@@ -17,6 +17,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
+#include <sched.h>
 
 // an empty signal handler
 void handler(int signal) {}
@@ -25,11 +26,20 @@ extern int runstats(double x, size_t n, double *mean, double *sd);
 
 
 int main(int argc, char const **argv) {
-  int i = 0;
+  int i = 0, rc;
   double t0 = 0, t = 0, dt = 0;
   struct itimerval itv;
   struct timespec ts;
   double mean = 0, sd = 0;
+  #ifdef __linux__
+  struct sched_param param = {.sched_priority = 80};
+  rc = sched_setscheduler(getpid(), SCHED_FIFO, &param);
+  if (rc) {
+    perror("Error (need sudo?): ");
+    exit(EXIT_FAILURE);
+  }
+  #endif
+
 
   // the itimer interval needs two time periods: it_value is the time before
   // the first occurrence, it_interval is the interval between further

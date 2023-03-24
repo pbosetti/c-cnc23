@@ -13,6 +13,8 @@
 #endif
 #include <stdio.h>
 #include <unistd.h>
+#include <sched.h>
+#include <stdlib.h>
 
 uint64_t now_ns() {
   static uint64_t is_init = 0;
@@ -64,6 +66,14 @@ int main(int argc, char const **argv) {
   struct timespec ts;
   int rc, i = 0;
   double mean = 0, sd = 0;
+  #ifdef __linux__
+  struct sched_param param = {.sched_priority = 80};
+  rc = sched_setscheduler(getpid(), SCHED_FIFO, &param);
+  if (rc) {
+    perror("Error (need sudo?): ");
+    exit(EXIT_FAILURE);
+  }
+  #endif
 
   // initialize the clock
   clock_gettime(CLOCK_MONOTONIC, &ts);
