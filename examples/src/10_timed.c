@@ -56,18 +56,21 @@ uint64_t wait_next(uint64_t interval) {
   return 0;
 }
 
+extern int runstats(double x, size_t n, double *mean, double *sd);
+
 
 int main(int argc, char const **argv) {
   double t0 = 0, t = 0, dt = 0;
   struct timespec ts;
   int rc, i = 0;
+  double mean = 0, sd = 0;
 
   // initialize the clock
   clock_gettime(CLOCK_MONOTONIC, &ts);
   t0 = ts.tv_sec + ts.tv_nsec / 1.0E9;
 
   // header
-  printf("n, dt\n");
+  fprintf(stderr, "n, dt\n");
   
   // main loop
   for (i = 0; i < 1000; i++) {
@@ -75,11 +78,13 @@ int main(int argc, char const **argv) {
     t = ts.tv_sec + ts.tv_nsec / 1.0E9;
     dt = t - t0;
     t0 = t;
-    printf("%03d, %f\n", i, dt);
+    runstats(dt, i + 1, &mean, &sd);
+    fprintf(stderr, "%03d, %f\n", i, dt);
     // let's pretend to do domething that takes 100 us
     usleep(100);
     wait_next(5e6);
   }
+  printf("Timestep: mean %.9f, sd %.9f\n", mean, sd);
 
   return 0;
 }

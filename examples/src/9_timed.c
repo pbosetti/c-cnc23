@@ -21,11 +21,15 @@
 // an empty signal handler
 void handler(int signal) {}
 
+extern int runstats(double x, size_t n, double *mean, double *sd);
+
+
 int main(int argc, char const **argv) {
   int i = 0;
   double t0 = 0, t = 0, dt = 0;
   struct itimerval itv;
   struct timespec ts;
+  double mean = 0, sd = 0;
 
   // the itimer interval needs two time periods: it_value is the time before
   // the first occurrence, it_interval is the interval between further
@@ -47,7 +51,7 @@ int main(int argc, char const **argv) {
   t0 = ts.tv_sec + ts.tv_nsec / 1.0E9;
 
   // header
-  printf("n, dt\n");
+  fprintf(stderr, "n, dt\n");
   
   // main loop
   for (i = 0; i < 1000; i++) {
@@ -58,9 +62,11 @@ int main(int argc, char const **argv) {
     t = ts.tv_sec + ts.tv_nsec / 1.0E9;
     dt = t - t0;
     t0 = t;
-    printf("%03d, %f\n", i, dt);
+    runstats(dt, i + 1, &mean, &sd);
+    fprintf(stderr, "%03d, %f\n", i, dt);
     // here we do our business, which is supposed to take less than 5000 us
   }
+  printf("Timestep: mean %.9f, sd %.9f\n", mean, sd);
 
   return 0;
 }

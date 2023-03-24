@@ -23,17 +23,20 @@ void *wait_thread(void *arg) {
   return NULL;
 }
 
+extern int runstats(double x, size_t n, double *mean, double *sd);
+
 int main(int argc, char const **argv) {
   pthread_t pt1;
   double t0=0, t, dt;
   struct timespec ts;
   int rc, i;
+  double mean = 0, sd = 0;
 
   // Get current time
   clock_gettime(CLOCK_MONOTONIC, &ts);
   t0 = ts.tv_sec + ts.tv_nsec / 1.0E9;
 
-  fprintf(stdout, "n, dt\n");
+  fprintf(stderr, "n, dt\n");
 
   for(i=0; i<1000; i++) {
     // Lets create the thread
@@ -46,13 +49,16 @@ int main(int argc, char const **argv) {
     dt = t - t0;
     t0 = t;
 
-    fprintf(stdout, "%d, %f\n", i, dt);
+    runstats(dt, i + 1, &mean, &sd);
+    fprintf(stderr, "%03d, %f\n", i, dt);
     // Lets do some work that takes 100 us
     usleep(100);
 
     // Finally, wait for the timing thread to elapse and return
     pthread_join(pt1, NULL);
   }
+
+  printf("Timestep: mean %.9f, sd %.9f\n", mean, sd);
 
   return 0;
 

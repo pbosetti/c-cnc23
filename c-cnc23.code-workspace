@@ -43,7 +43,8 @@
       "MACHINE_MAIN=1",
       "POINT_MAIN=1",
       "BLOCK_MAIN=1",
-      "PROGRAM_MAIN=1"
+      "PROGRAM_MAIN=1",
+      "STATS_MAIN=1"
     ],
     "files.associations": {
       "*.h": "c",
