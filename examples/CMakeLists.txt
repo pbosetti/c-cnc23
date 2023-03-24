@@ -38,5 +38,8 @@ endif()
 #    |_|\__,_|_|  \__, |\___|\__|___/
 #                 |___/              
 add_executable(0_hello ${SOURCES}/0_hello.c)
+add_executable(1_types ${SOURCES}/1_types.c)
 add_executable(2_basics ${SOURCES}/2_basics.c)
+add_executable(3_file ${SOURCES}/3_file.c)
 add_executable(4_include_guards ${SOURCES}/4_include_guards.c)
+add_executable(6_inout_p ${SOURCES}/6_inout_p.c ${SOURCES}/inout.c)
