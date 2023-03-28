@@ -60,7 +60,7 @@ int main(int argc, char const **argv) {
     t0 = t;
 
     runstats(dt, i + 1, &mean, &sd);
-    fprintf(stderr, "%03d, %f\n", i, dt);
+    fprintf(stderr, "%03d, %.9f\n", i, dt);
     // Lets do some work that takes 100 us
     usleep(100);
 

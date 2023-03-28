@@ -65,19 +65,19 @@ int main(int argc, char const **argv) {
   
   // main loop
   for (i = 0; i < 1000; i++) {
-    // the sleep waits for the next SIGALRM, but no more than 1 s
-    if (sleep(1) == 0) {
-      fprintf(stderr, "Warning: did not get an alarm within 1 second");
-      break;
+    // the sleep waits for the next SIGALRM, but no more than 0.1 s
+    if (usleep(100000) == 0) { // see man usleep
+      fprintf(stderr, "Warning: did not get an alarm within 0.1 seconds\n");
     }
+
     // calculate and print the delta time
     clock_gettime(CLOCK_MONOTONIC, &ts);
     t = ts.tv_sec + ts.tv_nsec / 1.0E9;
     dt = t - t0;
     t0 = t;
     runstats(dt, i + 1, &mean, &sd);
-    fprintf(stderr, "%03d, %f\n", i, dt);
-    // here we do our business, which is supposed to take less than 5000 us
+    fprintf(stderr, "%03d, %.9f\n", i, dt);
+    // here we do our business, which is supposed to take less than 100 ms
   }
   printf("Timestep: mean %.9f, sd %.9f\n", mean, sd);
 

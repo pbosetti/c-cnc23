@@ -88,7 +88,7 @@ int main(int argc, char const **argv) {
     dt = t - t0;
     t0 = t;
     runstats(dt, i + 1, &mean, &sd);
-    fprintf(stderr, "%03d, %f\n", i, dt);
+    fprintf(stderr, "%03d, %.9f\n", i, dt);
     // let's pretend to do domething that takes 100 us
     usleep(100);
     wait_next(5e6);
