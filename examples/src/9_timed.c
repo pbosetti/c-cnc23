@@ -66,7 +66,10 @@ int main(int argc, char const **argv) {
   // main loop
   for (i = 0; i < 1000; i++) {
     // the sleep waits for the next SIGALRM, but no more than 1 s
-    sleep(1);
+    if (sleep(1) == 0) {
+      fprintf(stderr, "Warning: did not get an alarm within 1 second");
+      break;
+    }
     // calculate and print the delta time
     clock_gettime(CLOCK_MONOTONIC, &ts);
     t = ts.tv_sec + ts.tv_nsec / 1.0E9;

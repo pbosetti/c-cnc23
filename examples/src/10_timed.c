@@ -8,7 +8,6 @@
 #include <stdint.h>
 #include <time.h>
 #ifdef __APPLE__
-#define HAVE_MACH_TIMER
 #include <mach/mach_time.h>
 #endif
 #include <stdio.h>
