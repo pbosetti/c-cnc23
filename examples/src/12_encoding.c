@@ -26,7 +26,7 @@
 // try to swap the above two lines and see the difference in output.
 
 // Chunk size for reallocating dynamic arrays
-#define SCORES_BLOCKS 10
+#define SCORES_BLOCKS 3
 
 //   ____  _                   _           _     _           _   
 //  / ___|| |_ _ __ _   _  ___| |_    ___ | |__ (_) ___  ___| |_ 
@@ -219,6 +219,10 @@ int main() {
   data_push(data, 1);
   data_push(data, 2.5);
   data_push(data, 3.8);
+  data_push(data, 3.9);
+  data_push(data, 4.0);
+  data_push(data, 4.1);
+  data_push(data, 4.2);
 
   printf("Data:\n");
   data_print(data);

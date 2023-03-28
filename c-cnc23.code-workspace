@@ -27,8 +27,8 @@
         {
           "type": "lldb",
           "request": "launch",
-          "name": "12_union",
-          "program": "${workspaceFolder}/examples/build/12_union",
+          "name": "12_encoding",
+          "program": "${workspaceFolder}/examples/build/12_encoding",
           "args": [],
           "cwd": "${workspaceFolder}/examples"
         }
@@ -46,6 +46,7 @@
       "PROGRAM_MAIN=1",
       "STATS_MAIN=1"
     ],
+    "C_Cpp.default.compilerPath": "/usr/bin/clang",
     "files.associations": {
       "*.h": "c",
       "*.rmd": "markdown",
