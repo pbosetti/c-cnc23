@@ -4,7 +4,7 @@ int main() {
   int n = 10;
 
   // First example
-  float *a;
+  float *a = NULL;
   printf("A address is: %p\n\n", a);
 
   a = f1(n);

@@ -17,6 +17,7 @@ set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_C_STANDARD 11)
 set(SOURCES ${CMAKE_CURRENT_LIST_DIR}/src)
 include_directories(${CMAKE_CURRENT_LIST_DIR}/include)
+add_compile_options(-Wall -DDEBUG)
 
 if(APPLE)
   # On Intel Macs, brew uses /usr/local
