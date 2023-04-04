@@ -4,17 +4,22 @@
       "path": "."
     }
   ],
+  "settings": {
+    "C_Cpp.default.defines": [
+      "STATS_MAIN=1",
+      "POINT_MAIN=1"
+    ]
+  },
   "launch": {
     "version": "0.2.0",
     "configurations": [
       {
-        "type": "lldb-vscode",
+        "type": "lldb",
         "request": "launch",
         "name": "hello",
-        "program": "${workspaceRoot}/build/hello",
+        "program": "${workspaceFolder}/build/hello",
         "args": [],
-        "env": [],
-        "cwd": "${workspaceRoot}"
+        "cwd": "${workspaceFolder}/build"
       }
     ],
     "compounds": []
