@@ -195,6 +195,12 @@ void list_loop(list_t *list, loop_fun_t fun, loop_order_t order,
   } while (e);
 }
 
+// Loop over all the elements in the list using a macro
+// the macro takes a pointer to the list, a pointer to the element iterator
+// and a loop block
+#define list_foreach(l, e) \
+  e = NULL; \
+  while((e = e ? e->next : l->first))
 
 //    ____      _ _ _                _        
 //   / ___|__ _| | | |__   __ _  ___| | _____ 
@@ -228,7 +234,7 @@ void print_element_with_index(element_t *e, loop_order_t o, void *userdata) {
 // 
 int main() {
   char id[4][10] = {"one", "two", "three", "four"};
-  element_t *e;
+  element_t *e, *element;
   size_t i;
 
   // create a list
@@ -258,6 +264,11 @@ int main() {
 
   i = list->length - 1;
   list_loop(list, print_element_with_index, DESC, &i);
+
+  // macro iterator
+  list_foreach(list, element) {
+    printf("id: %10s (%8p -> %8p -> %8p)\n", element->id, element->prev, element, element->next);
+  }
 
   // free memory
   list_free(list);
