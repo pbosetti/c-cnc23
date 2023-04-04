@@ -63,9 +63,10 @@ extern int runstats(double x, size_t n, double *mean, double *sd);
 int main(int argc, char const **argv) {
   double t0 = 0, t = 0, dt = 0;
   struct timespec ts;
-  int rc, i = 0;
+  int i = 0;
   double mean = 0, sd = 0;
   #ifdef __linux__
+  int rc;
   struct sched_param param = {.sched_priority = 80};
   rc = sched_setscheduler(getpid(), SCHED_FIFO, &param);
   if (rc) {

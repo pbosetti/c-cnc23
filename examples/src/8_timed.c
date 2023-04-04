@@ -51,6 +51,10 @@ int main(int argc, char const **argv) {
   for(i=0; i<1000; i++) {
     // Lets create the thread
     rc = pthread_create(&pt1, NULL, wait_thread, NULL);
+    if (rc) {
+      perror("Thread error: ");
+      break;
+    }
     // Meanwhile, we're doing our stuff that is supposed to take less than
     // the thread net time.
     // Calculate and print the delta time

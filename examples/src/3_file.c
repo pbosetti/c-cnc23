@@ -87,5 +87,5 @@ int main(int argc, const char **argv) {
   fprintf(stderr, "I'm an error!\n");
 
 end:
-  return ERROR_SUCCESS;
+  return result;
 }

@@ -26,12 +26,13 @@ extern int runstats(double x, size_t n, double *mean, double *sd);
 
 
 int main(int argc, char const **argv) {
-  int i = 0, rc;
+  int i = 0;
   double t0 = 0, t = 0, dt = 0;
   struct itimerval itv;
   struct timespec ts;
   double mean = 0, sd = 0;
   #ifdef __linux__
+  int rc;
   struct sched_param param = {.sched_priority = 80};
   rc = sched_setscheduler(getpid(), SCHED_FIFO, &param);
   if (rc) {
