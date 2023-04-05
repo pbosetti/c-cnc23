@@ -13,7 +13,7 @@ if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
   message(FATAL_ERROR "In-source builds not allowed! Create a build directory and run CMake from there.")
 endif()
 # This is dynamically updated in defines.h.in:
-set(VERSION "1.0")
+set(VERSION "1.1")
 project(C-CNC VERSION ${VERSION} LANGUAGES C CXX)
 
 
@@ -56,10 +56,10 @@ endif()
 set(SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/src)
 file(GLOB LIB_SOURCES "${SOURCE_DIR}/[^_]*.c")
 # generate defines.h
-# configure_file(
-#   ${SOURCE_DIR}/defines.h.in
-#   ${SOURCE_DIR}/defines.h
-# )
+configure_file(
+  ${SOURCE_DIR}/defines.h.in
+  ${SOURCE_DIR}/defines.h
+)
 
 
 #   _____                    _       

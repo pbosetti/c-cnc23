@@ -200,7 +200,7 @@ void list_loop(list_t *list, loop_fun_t fun, loop_order_t order,
 // and a loop block
 #define list_foreach(l, e) \
   e = NULL; \
-  while((e = e ? e->next : l->first))
+  while((e = (e ? e->next : l->first)))
 
 //    ____      _ _ _                _        
 //   / ___|__ _| | | |__   __ _  ___| | _____ 

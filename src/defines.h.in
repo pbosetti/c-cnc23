@@ -14,6 +14,10 @@
 #include <assert.h>
 #include <stdio.h>
 
+// Version string
+#define VERSION "@VERSION@"
+#define BUILD_TYPE "@CMAKE_BUILD_TYPE@"
+
 // COMMON TYPES
 typedef double data_t;
 
@@ -26,7 +30,7 @@ typedef double data_t;
 //  | |   / _ \| |/ _ \| '__/ __|
 //  | |__| (_) | | (_) | |  \__ \
 //   \____\___/|_|\___/|_|  |___/
-// CONSOLE COLOR CODES
+// CONSOLE ANSI COLOR CODES
 // EXAMPLE: printf("This is in "RED"red\n"CRESET)
 
 //Regular text

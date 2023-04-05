@@ -7,6 +7,7 @@ slprj/
 *.slxc
 *.dSYM
 
+
 # OS generated files
 .DS_Store
 
@@ -28,3 +29,4 @@ log*.txt
 # Cmake build directory and generated files
 /*build*
 /products*/*
+/src/defines.h
