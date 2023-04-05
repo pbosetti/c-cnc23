@@ -47,7 +47,7 @@ void point_set_x(point_t *p, data_t x) {
 
 // Bitmask logics:
 // xxxx xxxx -> initial value of bitmask
-// 0000 0010 -> X_SET, value of '\1'
+// 0000 0010 -> X_SET, value of '\2'
 // ---------
 // xxxx xx1x -> result of a bitwise OR
 void point_set_y(point_t *p, data_t y) {
@@ -58,7 +58,7 @@ void point_set_y(point_t *p, data_t y) {
 
 // Bitmask logics:
 // xxxx xxxx -> initial value of bitmask
-// 0000 0100 -> X_SET, value of '\1'
+// 0000 0100 -> X_SET, value of '\4'
 // ---------
 // xxxx x1xx -> result of a bitwise OR
 void point_set_z(point_t *p, data_t z) {
@@ -70,7 +70,7 @@ void point_set_z(point_t *p, data_t z) {
 
 // Bitmask logics:
 // xxxx xxxx -> initial value of bitmask
-// 0000 0111 -> X_SET, value of '\1'
+// 0000 0111 -> XYZ_SET, value of '\7'
 // ---------
 // xxxx x111 -> result of a bitwise OR
 void point_set_xyz(point_t *p, data_t x, data_t y, data_t z) {
