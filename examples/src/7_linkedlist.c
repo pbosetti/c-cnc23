@@ -272,6 +272,14 @@ int main() {
 
   // free memory
   list_free(list);
+  printf("First element after free: %zu\n", list->length);
+  // note: after free(), the memory pointed by list MIGHT still be readable
+  // but this is unsafe. For this reason, it is preferable to set a freed
+  // pointer to NULL immediately after, so any attempt in accessing it
+  // would segfault.
+  list = NULL; 
+  // this is actually not necessary if the free call is at the end of a block or
+  // function.
 
   return 0;
 }
