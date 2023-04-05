@@ -68,13 +68,13 @@ file(GLOB LIB_SOURCES "${SOURCE_DIR}/[^_]*.c")
 #    | | (_| | | | (_| |  __/ |_\__ \
 #    |_|\__,_|_|  \__, |\___|\__|___/
 #                 |___/              
-# Executables
-add_executable(hello ${SOURCE_DIR}/main/hello.c)
-
 # Libraries
 # All files in /src (except src/main) are compiled into a library
 add_library(c-cnc SHARED ${LIB_SOURCES})
 add_library(c-cnc_static STATIC ${LIB_SOURCES})
+
+# Executables
+add_executable(hello ${SOURCE_DIR}/main/hello.c)
 
 # Linking
 target_link_libraries(hello c-cnc)
