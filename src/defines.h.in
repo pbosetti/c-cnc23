@@ -107,8 +107,8 @@ typedef double data_t;
 #define CRESET "\e[0m"
 
 // MACRO FUNCTIONS
-#define eprintf(m, ...) fprintf(stderr, BRED "*** ERROR: " m CRESET, ##__VA_ARGS__)
+#define eprintf(m, ...) fprintf(stderr, BRED "*** ERROR: " CRESET m, ##__VA_ARGS__)
 
-#define wprintf(m, ...) fprintf(stderr, BYEL "*** WARNING: " m "" CRESET, ##__VA_ARGS__)
+#define wprintf(m, ...) fprintf(stderr, BYEL "*** WARNING: " CRESET m, ##__VA_ARGS__)
 
 #endif // DEFINES_H

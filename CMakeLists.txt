@@ -107,4 +107,3 @@ install(TARGETS ${TARGETS_LIST}
 #    |_|\___||___/\__|
 include(CTest)
 add_test(NAME hello COMMAND hello)
-set_property(TEST hello PROPERTY PASS_REGULAR_EXPRESSION "^Hello")

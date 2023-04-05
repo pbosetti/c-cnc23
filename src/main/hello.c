@@ -2,7 +2,7 @@
 #include "../defines.h"
 
 int main(int argc, char **argv) {
-  printf("Hello, " GRN "world!\n" CRESET);
+  printf("Hello, " GRN "world!" CRESET "\n");
   printf("Version: " VERSION ", build type " BUILD_TYPE "\n");
   // printf("Version %s, build type %s\n", VERSION, BUILD_TYPE);
   wprintf("This is the %dst warning that I'm givig you!\n", 1);
