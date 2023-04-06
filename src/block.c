@@ -3,7 +3,7 @@
 //  |  _ \| |/ _ \ / __| |/ /
 //  | |_) | | (_) | (__|   <
 //  |____/|_|\___/ \___|_|\_\
-
+//
 #include "defines.h"
 #include "block.h"
 
@@ -12,7 +12,7 @@
 //  | | | |/ _ \/ __| |/ _` | '__/ _` | __| |/ _ \| '_ \/ __|
 //  | |_| |  __/ (__| | (_| | | | (_| | |_| | (_) | | | \__ \
 //  |____/ \___|\___|_|\__,_|_|  \__,_|\__|_|\___/|_| |_|___/
-
+//
 // Velocity profile data
 typedef struct {
   data_t a, d;            // acceleration and deceleration
@@ -51,7 +51,7 @@ static point_t *point_zero(block_t *b);
 //  | |_ | | | | '_ \ / __| __| |/ _ \| '_ \/ __|
 //  |  _|| |_| | | | | (__| |_| | (_) | | | \__ \
 //  |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
-
+//
 // LIFECYCLE
 block_t *block_new(char const *line, block_t *prev) {
   assert(line);

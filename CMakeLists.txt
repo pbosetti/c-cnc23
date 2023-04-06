@@ -36,7 +36,7 @@ add_compile_options(
 )
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
   message(STATUS "Debug mode, enabling all warnings")
-  add_compile_options(-Wall -DDEBUG)
+  add_compile_options(-Wall -DDEBUG -Wno-comment)
 endif()
 # Language Standard
 set(CMAKE_CXX_STANDARD 17)
@@ -111,3 +111,4 @@ install(TARGETS ${TARGETS_LIST}
 #    |_|\___||___/\__|
 include(CTest)
 add_test(NAME hello COMMAND hello)
+add_test(NAME point COMMAND point)
