@@ -75,9 +75,13 @@ add_library(c-cnc_static STATIC ${LIB_SOURCES})
 
 # Executables
 add_executable(hello ${SOURCE_DIR}/main/hello.c)
+add_executable(point ${SOURCE_DIR}/point.c)
+target_compile_definitions(point PUBLIC POINT_MAIN)
 
 # Linking
 target_link_libraries(hello c-cnc)
+target_link_libraries(c-cnc m)
+target_link_libraries(point m)
 
 
 #   _____           _        _ _ 
