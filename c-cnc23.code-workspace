@@ -20,6 +20,14 @@
         "program": "${workspaceFolder}/build/hello",
         "args": [],
         "cwd": "${workspaceFolder}/build"
+      },
+      {
+        "type": "lldb",
+        "request": "launch",
+        "name": "point",
+        "program": "${workspaceFolder}/build/point",
+        "args": [],
+        "cwd": "${workspaceFolder}/build"
       }
     ],
     "compounds": []

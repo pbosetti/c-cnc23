@@ -59,7 +59,7 @@ block_t *block_new(char const *line, block_t *prev) {
   block_t *b = malloc(sizeof(block_t));
   if (!b) {
     eprintf("Could not allocate memory for a block\n");
-    return NULL;
+    goto fail;
   }
 
   if (prev) { // copy the memory from the previous block
@@ -80,25 +80,24 @@ block_t *block_new(char const *line, block_t *prev) {
   b->prof = malloc(sizeof(block_profile_t));
   if (!b->prof) {
     eprintf("Could not allocate memory for block profile\n");
-    block_free(b);
-    return NULL;
+    goto fail;
   }
   b->target = point_new();
   b->delta = point_new();
   b->center = point_new();
   if (!b->center || !b->delta || !b->target) {
     eprintf("Could not allocate points in a new block\n");
-    block_free(b);
-    return NULL;
+    goto fail;
   }
   b->line = strdup(line);
   if (!b->line) {
     eprintf("Could not allocate memory for block line\n");
-    block_free(b);
-    return NULL;
+    goto fail;
   }
-
   return b;
+fail:
+  if (b) block_free(b);
+  return NULL;
 }
 
 void block_free(block_t *b) {

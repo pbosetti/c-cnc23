@@ -38,6 +38,7 @@ void point_free(point_t *p) {
 }
 
 #define FIELD_SIZE 8
+#define FORMAT "[" RED "%s " GRN "%s " BLU "%s" CRESET "]"
 void point_inspect(point_t const *p, char **desc) {
   assert(p);
   char str_x[FIELD_SIZE + 1], str_y[FIELD_SIZE + 1], str_z[FIELD_SIZE + 1];
@@ -56,13 +57,17 @@ void point_inspect(point_t const *p, char **desc) {
   } else {
     sprintf(str_z, "%*s", FIELD_SIZE, "-");
   }
-  if (asprintf(desc, "[%s %s %s]", str_x, str_y, str_z) == -1) {
-    eprintf("Could not allocate memory for point description.\n");
-    exit(EXIT_FAILURE);
+  if (*desc) {
+    snprintf(*desc, strlen(*desc)+1, FORMAT, str_x, str_y, str_z);
+  } else {
+    if (asprintf(desc, FORMAT, str_x, str_y, str_z) == -1) {
+      eprintf("Could not allocate memory for point description.\n");
+      exit(EXIT_FAILURE);
+    }
   }
 }
 #undef FIELD_SIZE
-
+#undef FORMAT
 
 // ACCESSORS (getting/setting object fields)
 
@@ -149,7 +154,6 @@ void point_set_xyz(point_t *p, data_t x, data_t y, data_t z) {
   p->s = XYZ_SET;
 }
 
-
 // METHODS (Functions that operate on an object)
 
 data_t point_dist(point_t const *from, point_t const *to) {
@@ -158,12 +162,10 @@ data_t point_dist(point_t const *from, point_t const *to) {
               pow(to->z - from->z, 2));
 }
 
-
 void point_delta(point_t const *from, point_t const *to, point_t *delta) {
   assert(from && to && delta);
   point_set_xyz(delta, to->x - from->x, to->y - from->y, to->z - from->z);
 }
-
 
 void point_modal(point_t const *from, point_t *to) {
   assert(from && to);
@@ -182,7 +184,7 @@ void point_modal(point_t const *from, point_t *to) {
 #ifdef POINT_MAIN
 int main(int argc, char const *argv[]) {
   point_t *p1, *p2, *p3;
-  char *desc;
+  char *desc = NULL;
   // create three points:
   p1 = point_new();
   p2 = point_new();
@@ -194,13 +196,13 @@ int main(int argc, char const *argv[]) {
   point_set_x(p2, 100);
   point_set_y(p2, 110);
   point_inspect(p2, &desc);
-  printf("Initial p2: %s\n", desc);
+  printf("Initial p2:         %s\n", desc);
   // modal:
   point_modal(p1, p2);
   point_inspect(p2, &desc);
-  printf("After modal p2: %s\n", desc);
+  printf("After modal p2:     %s\n", desc);
   // distance
-  printf("Distance p1->p2: %f\n", point_dist(p1, p2));
+  printf("Distance p1->p2:    %f\n", point_dist(p1, p2));
   // Delta:
   point_delta(p1, p2, p3);
   point_inspect(p3, &desc);
