@@ -4,8 +4,11 @@
 //  | |_) | | (_) | (__|   <
 //  |____/|_|\___/ \___|_|\_\
 //
-#include "defines.h"
 #include "block.h"
+#include "defines.h"
+#include <ctype.h> // toupper()
+#include <math.h>
+#include <sys/param.h> // MIN()
 
 //   ____            _                 _   _
 //  |  _ \  ___  ___| | __ _ _ __ __ _| |_(_) ___  _ __  ___
@@ -39,12 +42,16 @@ typedef struct block {
   data_t theta0, dtheta; // initial and arc angles
   data_t acc;            // actual acceleration
   block_profile_t *prof; // block velocity profile data
+  machine_t *machine;    // machine object
   struct block *prev;
   struct block *next;
 } block_t;
 
 // STATIC FUNCTIONS
-static point_t *point_zero(block_t *b);
+static point_t *start_point(block_t *b);
+static int block_arc(block_t *b);
+static void block_compute(block_t *b);
+static int block_set_fields(block_t *b, char cmd, char *arg);
 
 //   _____                 _   _
 //  |  ___|   _ _ __   ___| |_(_) ___  _ __  ___
@@ -53,7 +60,7 @@ static point_t *point_zero(block_t *b);
 //  |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
 //
 // LIFECYCLE
-block_t *block_new(char const *line, block_t *prev) {
+block_t *block_new(char const *line, block_t *prev, machine_t *machine) {
   assert(line);
   // allocate memory
   block_t *b = malloc(sizeof(block_t));
@@ -70,11 +77,14 @@ block_t *block_new(char const *line, block_t *prev) {
     memset(b, 0, sizeof(block_t));
   }
 
-  // in any casem all non-modal parameters are set to 0
+  // in any case all non-modal parameters are set to 0
   b->i = b->j = b->r = 0;
   b->length = 0;
   b->type = NO_MOTION;
-  b->acc = 0;
+
+  // machine parameters
+  b->machine = machine;
+  b->acc = machine_A(machine);
 
   // fields to be calculated
   b->prof = malloc(sizeof(block_profile_t));
@@ -96,7 +106,8 @@ block_t *block_new(char const *line, block_t *prev) {
   }
   return b;
 fail:
-  if (b) block_free(b);
+  if (b)
+    block_free(b);
   return NULL;
 }
 
@@ -117,11 +128,10 @@ void block_free(block_t *b) {
 
 void block_print(block_t *b, FILE *out) {
   assert(b && out);
-  char *start, *end;
-  point_t *p0 = point_zero(b);
-  point_inspect(p0, &start);
+  char *start = NULL, *end = NULL;
+  point_inspect(start_point(b), &start);
   point_inspect(b->target, &end);
-  fprintf(out, "%03lu %s->%s F%7.1f S%7.1f T%2lu (G%02d)\n", b->n, start, end,
+  fprintf(out, "%03lu %s->%s F%7.1f S%7.1f T%02lu (G%02d)\n", b->n, start, end,
           b->feedrate, b->spindle, b->tool, b->type);
   free(start);
   free(end);
@@ -148,7 +158,78 @@ block_getter(block_t *, next, next);
 
 // METHODS
 
-int block_parse(block_t *b) { return 0; }
+int block_parse(block_t *b) {
+  assert(b);
+  char *word, *line, *tofree;
+  point_t *p0;
+  int rv = 0;
+
+  tofree = line = strdup(b->line);
+  if (!line) {
+    eprintf("Could not allocate momory for tokenizing line\n");
+    return -1;
+  }
+  // Tokenizing loop
+  while ((word = strsep(&line, " ")) != NULL) {
+    // word[0] is the command
+    // word+1 is the pointer to the argument as a string
+    rv += block_set_fields(b, toupper(word[0]), word + 1);
+  }
+  free(tofree);
+
+  // inherit modal fields from the previous block
+  p0 = start_point(b);
+  point_modal(p0, b->target);
+  point_delta(p0, b->target, b->delta);
+  b->length = point_dist(p0, b->target);
+
+  // deal with motion blocks
+  switch (b->type) {
+  case LINE:
+    // calculate feed profile
+    b->acc = machine_A(b->machine);
+    b->arc_feedrate = b->feedrate;
+    block_compute(b);
+    break;
+  case ARC_CW:
+  case ARC_CCW:
+    // calculate arc coordinates
+    if (block_arc(b)) {
+      wprintf("Could not calculate acr coordinates\n");
+      rv++;
+      break;
+    }
+    // set corrected feedrate and acceleration
+    // centripetal acc = f^2/r, must be <= A
+    // INI file gives A in mm/s^2, feedrate is given in mm/min
+    // We divide by two because, in the critical condition where we have
+    // the maximum feedrate, in the following equation for calculating the
+    // acceleration, it goes to 0. In fact, if we accept the centripetal
+    // acceleration to reach the maximum acceleration, then the tangential
+    // acceleration would go to 0.
+    // A more elegant solution would be to calculate a minimum time soltion
+    // for the whole arc, but it is outside the scope.
+    b->arc_feedrate =
+        MIN(b->feedrate, sqrt(machine_A(b->machine) / 2.0 * b->r) * 60);
+    // tangential acceleration: when composed with centripetal one, total
+    // acceleration must be <= A
+    // a^2 <= A^2 + v^4/r^2
+    b->acc = sqrt(pow(machine_A(b->machine), 2) -
+                  pow(b->arc_feedrate / 60, 4) / pow(b->r, 2));
+    // deal with complex result
+    if (isnan(b->acc)) {
+      wprintf("Cannot compute arc: insufficient acceleration\n");
+      rv++;
+    }
+    // calculate feed profile
+    block_compute(b);
+    break;
+  default:
+    break;
+  }
+  // return number of parsing errors
+  return rv;
+}
 
 data_t block_lambda(block_t *b, data_t time, data_t *v) { return 0; }
 
@@ -160,8 +241,93 @@ point_t *block_interpolate(block_t *b, data_t lambda) { return NULL; }
 //   ___) | || (_| | |_| | (__  |  _| |_| | | | | (__| |_| | (_) | | | \__ \
 //  |____/ \__\__,_|\__|_|\___| |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
 
-static point_t *point_zero(block_t *b) {
-  point_t *p = point_new();
-
-  return p;
+// Return a reliable previous point, i.e. machine zero if this is the first
+// block
+static point_t *start_point(block_t *b) {
+  assert(b);
+  return b->prev ? b->prev->target : machine_zero(b->machine);
 }
+
+static int block_set_fields(block_t *b, char cmd, char *arg) {
+  assert(b && arg);
+  switch (cmd)
+  {
+  case 'N':
+    b->n = atol(arg);
+    break;
+  case 'G':
+    b->type = (block_type_t)atoi(arg);
+    break;
+  case 'X':
+    point_set_x(b->target, atof(arg));
+    break;
+  case 'Y':
+    point_set_y(b->target, atof(arg));
+    break;
+  case 'Z':
+    point_set_z(b->target, atof(arg));
+    break;
+  case 'I': 
+    b->i = atof(arg);
+    break;
+  case 'J':
+    b->j = atof(arg);
+    break;
+  case 'R':
+    b->r = atof(arg);
+    break;
+  case 'F':
+    b->feedrate = atof(arg);
+    break;
+  case 'S':
+    b->spindle = atof(arg);
+    break; 
+  case 'T':
+    b->tool = atol(arg);   
+    break;
+  default:
+    fprintf(stderr, "ERROR: Usupported G-code command %c%s\n", cmd, arg);
+    return 1;
+    break;
+  }
+  // cannot have R and IJ on the same block
+  if (b->r && (b->i || b->j)) {
+    fprintf(stderr, "ERROR: Cannot mix R and IJ\n");
+    return 1;
+  }
+  return 0;
+}
+
+static int block_arc(block_t *b) { return 0; }
+
+static void block_compute(block_t *b) {}
+
+//   __  __       _
+//  |  \/  | __ _(_)_ __
+//  | |\/| |/ _` | | '_ \
+//  | |  | | (_| | | | | |
+//  |_|  |_|\__,_|_|_| |_|
+//
+#ifdef BLOCK_MAIN
+int main(int argc, char const *argv[]) {
+  block_t *b1 = NULL, *b2 = NULL, *b3 = NULL;
+  machine_t *cfg = machine_new(argv[1]);
+  if (!cfg) exit(EXIT_FAILURE);
+
+  b1 = block_new("N10 G00 X90 Y90 Z100 t3", NULL, cfg);
+  block_parse(b1);
+  b2 = block_new("N20 G01 Y100 X100 F1000 S2000", b1, cfg);
+  block_parse(b2);
+  b3 = block_new("N30 G01 Y200", b2, cfg);
+  block_parse(b3);
+
+  block_print(b1, stdout);
+  block_print(b2, stdout);
+  block_print(b3, stdout);
+
+  block_free(b1);
+  block_free(b2);
+  block_free(b3);
+  return 0;
+}
+#endif

@@ -77,6 +77,10 @@ add_library(c-cnc_static STATIC ${LIB_SOURCES})
 add_executable(hello ${SOURCE_DIR}/main/hello.c)
 add_executable(point ${SOURCE_DIR}/point.c)
 target_compile_definitions(point PUBLIC POINT_MAIN)
+add_executable(machine ${SOURCE_DIR}/machine.c ${SOURCE_DIR}/point.c  ${SOURCE_DIR}/toml.c)
+target_compile_definitions(machine PUBLIC MACHINE_MAIN)
+add_executable(block ${LIB_SOURCES})
+target_compile_definitions(block PUBLIC BLOCK_MAIN)
 
 # Linking
 target_link_libraries(hello c-cnc)
@@ -112,3 +116,4 @@ install(TARGETS ${TARGETS_LIST}
 include(CTest)
 add_test(NAME hello COMMAND hello)
 add_test(NAME point COMMAND point)
+add_test(NAME machine COMMAND machine ../machine.ini)
