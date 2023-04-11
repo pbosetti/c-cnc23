@@ -19,10 +19,11 @@
 
 typedef struct machine {
   // C-CNC INI section
-  data_t A;
-  data_t tq;
-  data_t max_error;
-  point_t *zero;
+  data_t A;                     // max acceleration (absolute value)
+  data_t tq;                    // time step
+  data_t max_error, error;      // maximum permissible error and actual error
+  point_t *zero;                // machine origin
+  point_t *setpoint, *position; // set point and actual position
 } machine_t;
 
 //   _____                 _   _
@@ -49,6 +50,8 @@ machine_t *machine_new(const char *ini_path) {
   m->max_error = 0.020;
   m->tq = 0.005;
   m->zero = point_new();
+  m->setpoint = point_new();
+  m->position = point_new();
   point_set_xyz(m->zero, 0, 0, 0);
 
   ini_file = fopen(ini_path, "r");
@@ -104,6 +107,9 @@ fail:
 
 void machine_free(machine_t *m) {
   assert(m);
+  point_free(m->zero);
+  point_free(m->setpoint);
+  point_free(m->position);
   free(m);
 }
 
@@ -117,7 +123,10 @@ void machine_free(machine_t *m) {
 machine_getter(data_t, A);
 machine_getter(data_t, tq);
 machine_getter(data_t, max_error);
+machine_getter(data_t, error);
 machine_getter(point_t *, zero);
+machine_getter(point_t *, setpoint);
+machine_getter(point_t *, position);
 
 // Methods
 
