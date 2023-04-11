@@ -421,6 +421,7 @@ static int block_arc(block_t *b) {
   b->r = fabs(b->r);
   return 0;
 }
+
 static void block_compute(block_t *b) {
   assert(b);
   data_t A, a, d;
