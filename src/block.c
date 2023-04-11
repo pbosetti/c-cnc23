@@ -200,28 +200,25 @@ int block_parse(block_t *b) {
       rv++;
       break;
     }
-    // set corrected feedrate and acceleration
-    // centripetal acc = f^2/r, must be <= A
-    // INI file gives A in mm/s^2, feedrate is given in mm/min
-    // We divide by two because, in the critical condition where we have
-    // the maximum feedrate, in the following equation for calculating the
-    // acceleration, it goes to 0. In fact, if we accept the centripetal
-    // acceleration to reach the maximum acceleration, then the tangential
-    // acceleration would go to 0.
+    // Set corrected feedrate and acceleration
+    // Centripetal acc = f^2/r, must be <= A
+    // We divide by two because with a tangential component equal to A,
+    // any non-null feedrate is providing a total acceleration in excess of A.
+    b->acc = machine_A(b->machine) / 2.0;
+    // Then: a_m^2/4 + (a_m^4 t^4) / (16 r^2) = A^2
+    // solve for t: t^4 = 12 r^2 / a_m^2 (t at max total acceleration)
+    // calculate feedrate at t: f = a_m/2 t = (3/4 a_m^2 r^2)^0.25
+    // INI file gives A in mm/s^2, feedrate is given in mm/min.
     // A more elegant solution would be to calculate a minimum time soltion
     // for the whole arc, but it is outside the scope.
     b->arc_feedrate =
-        MIN(b->feedrate, sqrt(machine_A(b->machine) / 2.0 * b->r) * 60);
-    // tangential acceleration: when composed with centripetal one, total
-    // acceleration must be <= A
-    // a^2 <= A^2 + v^4/r^2
-    b->acc = sqrt(pow(machine_A(b->machine), 2) -
-                  pow(b->arc_feedrate / 60, 4) / pow(b->r, 2));
-    // deal with complex result
-    if (isnan(b->acc)) {
-      wprintf("Cannot compute arc: insufficient acceleration\n");
-      rv++;
-    }
+        MIN(b->feedrate, pow(3.0/4.0*pow(machine_A(b->machine),2)*pow(b->r,2), 0.25) * 60);
+    fprintf(stderr, "%f\n%f\n%f\n%f\n%f\n", 
+      pow(machine_A(b->machine),2), 
+      pow(b->r,2), 
+      pow(3.0/4.0*pow(machine_A(b->machine),2)*pow(b->r,2), 0.25), 
+      pow(3.0/4.0*pow(machine_A(b->machine),2)*pow(b->r,2), 0.25) * 60,
+      b->arc_feedrate);
     // calculate feed profile
     block_compute(b);
     break;
@@ -471,7 +468,7 @@ static void block_compute(block_t *b) {
 // build/block | nocolor > out.txt
 #ifdef BLOCK_MAIN
 int main(int argc, char const *argv[]) {
-  block_t *b1 = NULL, *b2 = NULL, *b3 = NULL;
+  block_t *b1 = NULL, *b2 = NULL, *b3 = NULL, *b4 = NULL, *b5 = NULL;
   machine_t *cfg = machine_new(argv[1]);
   if (!cfg) exit(EXIT_FAILURE);
 
@@ -481,22 +478,28 @@ int main(int argc, char const *argv[]) {
   block_parse(b2);
   b3 = block_new("N30 G01 Y200", b2, cfg);
   block_parse(b3);
+  b4 = block_new("N40 G01 X0 Y0 Z0", b3, cfg);
+  block_parse(b4);
+  b5 = block_new("N50 G02 X100 Y100 Z0 I100 J0 F7000", b4, cfg);
+  block_parse(b5);
 
   block_print(b1, stderr);
   block_print(b2, stderr);
   block_print(b3, stderr);
+  block_print(b4, stderr);
+  block_print(b5, stderr);
 
-  wprintf("Interpolating block b1 (duration %f s):\n", block_dt(b1));
+  wprintf("Interpolating block b5 (duration %f s):\n", block_dt(b5));
   {
     data_t t = 0, lambda = 0, v = 0;
     data_t tq = machine_tq(cfg);
-    data_t dt = block_dt(b1);
+    data_t dt = block_dt(b5);
     point_t *pos;
     char *desc = NULL;
     printf("t lambda v x y z\n");
     for (t = 0; t <= dt + tq/10; t += tq) {
-      lambda = block_lambda(b1, t, &v);
-      pos = block_interpolate(b1, lambda);
+      lambda = block_lambda(b5, t, &v);
+      pos = block_interpolate(b5, lambda);
       point_inspect(pos, &desc);
       printf("%f %f %f %f %f %f %s\n", t, lambda, v, point_x(pos), point_y(pos), point_z(pos), desc);
     }
