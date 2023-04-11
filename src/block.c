@@ -15,30 +15,30 @@
 //
 // Velocity profile data
 typedef struct {
-  data_t a, d;            // acceleration and deceleration
-  data_t f, l;            // nominal feedrate and length
-  data_t fs, fe;          // initial and final feedrate
-  data_t dt_1, dt_m, dt2; // trapezoidal profile times
-  data_t dt;              // total block duration
+  data_t a, d;             // acceleration and deceleration
+  data_t f, l;             // nominal feedrate and length
+  data_t fs, fe;           // initial and final feedrate
+  data_t dt_1, dt_m, dt_2; // trapezoidal profile times
+  data_t dt;               // total block duration
 } block_profile_t;
 
 // Object struct (opaque)
 typedef struct block {
-  char *line;            // G-code string
-  block_type_t type;     // block type
-  size_t n;              // block number
-  size_t tool;           // tool number
-  data_t feedrate;       // feedrate in mm/min
-  data_t arc_feedrate;   // actual nominal feedrate along an arc motion
-  data_t spindle;        // spindle rotational speed in RPM
-  point_t *target;       // final coordinate of this block
-  point_t *delta;        // projections
-  point_t *center;       // arc center coordinates
-  data_t length;         // segment of arc length
-  data_t i, j, r;        // arc parameters
-  data_t theta0, dtheta; // initial and arc angles
-  data_t acc;            // actual acceleration
-  block_profile_t *prof; // block velocity profile data
+  char *line;              // G-code string
+  block_type_t type;       // block type
+  size_t n;                // block number
+  size_t tool;             // tool number
+  data_t feedrate;         // feedrate in mm/min
+  data_t arc_feedrate;     // actual nominal feedrate along an arc motion
+  data_t spindle;          // spindle rotational speed in RPM
+  point_t *target;         // final coordinate of this block
+  point_t *delta;          // projections
+  point_t *center;         // arc center coordinates
+  data_t length;           // segment of arc length
+  data_t i, j, r;          // arc parameters
+  data_t theta0, dtheta;   // initial and arc angles
+  data_t acc;              // actual acceleration
+  block_profile_t *prof;   // block velocity profile data
   struct block *prev;
   struct block *next;
 } block_t;
@@ -70,7 +70,7 @@ block_t *block_new(char const *line, block_t *prev) {
     memset(b, 0, sizeof(block_t));
   }
 
-  // in any casem all non-modal parameters are set to 0
+  // in any case all non-modal parameters are set to 0
   b->i = b->j = b->r = 0;
   b->length = 0;
   b->type = NO_MOTION;
