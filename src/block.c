@@ -137,7 +137,7 @@ void block_print(block_t *b, FILE *out) {
 
 block_getter(data_t, length, length);
 block_getter(data_t, dtheta, dtheta);
-block_getter(data_t, prof->dt, dd);
+block_getter(data_t, prof->dt, dt);
 block_getter(block_type_t, type, type);
 block_getter(char *, line, line);
 block_getter(size_t, n, n);
