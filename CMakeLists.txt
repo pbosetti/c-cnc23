@@ -86,6 +86,8 @@ target_compile_definitions(block PUBLIC BLOCK_MAIN)
 target_link_libraries(hello c-cnc)
 target_link_libraries(c-cnc m)
 target_link_libraries(point m)
+target_link_libraries(block m)
+target_link_libraries(machine m)
 
 
 #   _____           _        _ _ 
