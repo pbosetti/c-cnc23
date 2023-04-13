@@ -85,8 +85,10 @@ machine_t *machine_new(char const *cfg_path) {
   d = toml_string_in(tab, #key);                                               \
   if (!d.ok)                                                                   \
     wprintf("Missing %s:%s\n", toml_table_key(tab), #key);                     \
-  else                                                                         \
-    strncpy(machine->key, d.u.s, strlen(machine->key));
+  else {                                                                       \
+    strncpy(machine->key, d.u.s, strlen(machine->key));                        \
+    free(d.u.s);                                                               \
+  }
 
   // 3. extract values from the C-CNC section
   // Sections must exist; missing keys only give a warning and use the default

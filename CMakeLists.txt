@@ -79,12 +79,15 @@ add_executable(point ${SOURCE_DIR}/point.c)
 target_compile_definitions(point PUBLIC POINT_MAIN)
 add_executable(machine ${LIB_SOURCES})
 target_compile_definitions(machine PUBLIC MACHINE_MAIN)
+add_executable(block ${LIB_SOURCES})
+target_compile_definitions(block PUBLIC BLOCK_MAIN)
 
 # Linking
 target_link_libraries(hello c-cnc)
 target_link_libraries(c-cnc m)
 target_link_libraries(point m)
 target_link_libraries(machine m)
+target_link_libraries(block m)
 
 
 #   _____           _        _ _ 
