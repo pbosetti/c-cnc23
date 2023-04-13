@@ -39,7 +39,7 @@ typedef enum {
 //  |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
                                               
 // LIFECYCLE
-block_t *block_new(char const *line, block_t *prev, machine_t *machine);
+block_t *block_new(char const *line, block_t *prev, machine_t const *machine);
 void block_free(block_t *b);
 void block_print(block_t *b, FILE *out);
 

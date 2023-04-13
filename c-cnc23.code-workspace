@@ -36,7 +36,7 @@
         "name": "block",
         "program": "${workspaceFolder}/build/block",
         "args": ["machine.ini"],
-        "cwd": "${workspaceFolder}/"
+        "cwd": "${workspaceFolder}"
       }
     ],
     "compounds": []

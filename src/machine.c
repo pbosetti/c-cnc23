@@ -3,10 +3,9 @@
 //  | |\/| |/ _` |/ __| '_ \| | '_ \ / _ \
 //  | |  | | (_| | (__| | | | | | | |  __/
 //  |_|  |_|\__,_|\___|_| |_|_|_| |_|\___|
-//
+
 #include "machine.h"
 #include "toml.h"
-#include <errno.h>
 #include <string.h>
 
 //   ____            _                 _   _
@@ -32,90 +31,101 @@ typedef struct machine {
 //  |  _|| |_| | | | | (__| |_| | (_) | | | \__ \
 //  |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
 
-// Lifecycle
-machine_t *machine_new(const char *ini_path) {
-  FILE *ini_file = NULL;
-  char errbuf[BUFLEN];
-  machine_t *m = NULL;
-  toml_table_t *conf = NULL;
+// LIFECYCLE
 
-  m = malloc(sizeof(machine_t));
+machine_t *machine_new(char const *cfg_path) {
+  machine_t *m = NULL;
+  FILE *ini_file = NULL;
+  toml_table_t *conf = NULL;
+  char errbuf[BUFLEN];
+  // Allocate memory
+  m = malloc(sizeof(*m));
   if (!m) {
-    eprintf("Could not allocate memory for machine\n");
+    eprintf("Could not allocate memory for machine object\n");
     return NULL;
   }
-  memset(m, 0, sizeof(machine_t));
-  // Defaults
+  // Set defaults:
+  memset(m, 0, sizeof(*m));
   m->A = 100;
-  m->max_error = 0.020;
+  m->max_error = 0.010;
   m->tq = 0.005;
   m->zero = point_new();
-  m->setpoint = point_new();
   m->position = point_new();
+  m->setpoint = point_new();
   point_set_xyz(m->zero, 0, 0, 0);
 
-  ini_file = fopen(ini_path, "r");
+  // Import values form a INI file
+  // 1. open the file
+  ini_file = fopen(cfg_path, "r");
   if (!ini_file) {
-    eprintf("Could not open INI file: %s\n", strerror(errno));
+    eprintf("Could not open the file %s\n", cfg_path);
     goto fail;
   }
+  // 2. parse the file into a toml_table_t object
   conf = toml_parse_file(ini_file, errbuf, BUFLEN);
   fclose(ini_file);
   if (!conf) {
-    eprintf("Parsing INI file: %s\n", errbuf);
+    eprintf("Could not parse INI file: %s\n", errbuf);
     goto fail;
   }
 
-// macros for reading and storing INI values
-#define TREAD_I(d, machine, tab, key)                                          \
+  // define some macros for reading doubles, integers and strings.
+#define T_READ_I(d, machine, tab, key)                                         \
   d = toml_int_in(tab, #key);                                                  \
   if (!d.ok)                                                                   \
     wprintf("Missing %s:%s\n", toml_table_key(tab), #key);                     \
   else                                                                         \
     machine->key = d.u.i;
-#define TREAD_D(d, machine, tab, key)                                          \
+#define T_READ_D(d, machine, tab, key)                                         \
   d = toml_double_in(tab, #key);                                               \
   if (!d.ok)                                                                   \
     wprintf("Missing %s:%s\n", toml_table_key(tab), #key);                     \
   else                                                                         \
     machine->key = d.u.d;
-#define TREAD_S(d, machine, tab, key)                                          \
+#define T_READ_S(d, machine, tab, key)                                         \
   d = toml_string_in(tab, #key);                                               \
   if (!d.ok)                                                                   \
     wprintf("Missing %s:%s\n", toml_table_key(tab), #key);                     \
-  else                                                                         \
-    strncpy(machine->key, d.u.s, sizeof(machine->key));
+  else {                                                                       \
+    strncpy(machine->key, d.u.s, strlen(machine->key));                        \
+    free(d.u.s);                                                               \
+  }
 
-  { // Section C-CNC
+  // 3. extract values from the C-CNC section
+  // Sections must exist; missing keys only give a warning and use the default
+  {
     toml_datum_t d;
     toml_table_t *ccnc = toml_table_in(conf, "C-CNC");
     if (!ccnc) {
       eprintf("Missing C-CNC section\n");
       goto fail;
     }
-    TREAD_D(d, m, ccnc, A);
-    TREAD_D(d, m, ccnc, max_error);
-    TREAD_D(d, m, ccnc, tq);
+    T_READ_D(d, m, ccnc, A);
+    T_READ_D(d, m, ccnc, max_error);
+    T_READ_D(d, m, ccnc, tq);
   }
   toml_free(conf);
   return m;
 
 fail:
-  free(m);
+  machine_free(m);
   return NULL;
 }
 
 void machine_free(machine_t *m) {
   assert(m);
-  point_free(m->zero);
-  point_free(m->setpoint);
-  point_free(m->position);
+  if (m->zero)
+    point_free(m->zero);
+  if (m->setpoint)
+    point_free(m->setpoint);
+  if (m->position)
+    point_free(m->position);
   free(m);
 }
 
-// MARK: Accessors
+// ACCESSORS
 #define machine_getter(typ, par)                                               \
-  typ machine_##par(const machine_t *m) {                                      \
+  typ machine_##par(machine_t const *m) {                                      \
     assert(m);                                                                 \
     return m->par;                                                             \
   }
@@ -128,29 +138,29 @@ machine_getter(point_t *, zero);
 machine_getter(point_t *, setpoint);
 machine_getter(point_t *, position);
 
-// Methods
-
-void machine_print_params(machine_t *m) {
+// METHODS
+void machine_print_params(machine_t const *m) {
   printf(BGRN "Machine parameters:\n" CRESET);
-  printf(BBLK "C-CNC:A:          " CRESET "%f\n", m->A);
-  printf(BBLK "C-CNC:tq:         " CRESET "%f\n", m->tq);
-  printf(BBLK "C-CNC:max_error:  " CRESET "%f\n", m->max_error);
+  printf(BBLK "C-CNC:A:         " CRESET "%f\n", m->A);
+  printf(BBLK "C-CNC:tq:        " CRESET "%f\n", m->tq);
+  printf(BBLK "C-CNC:max_error: " CRESET "%f\n", m->max_error);
 }
 
-#ifdef MACHINE_MAIN
-//   _____         _   _
-//  |_   _|__  ___| |_(_)_ __   __ _
-//    | |/ _ \/ __| __| | '_ \ / _` |
-//    | |  __/\__ \ |_| | | | | (_| |
-//    |_|\___||___/\__|_|_| |_|\__, |
-// Only for testing local file |___/
+//   _____         _
+//  |_   _|__  ___| |_
+//    | |/ _ \/ __| __|
+//    | |  __/\__ \ |_
+//    |_|\___||___/\__|
 
-int main(int argc, const char **argv) {
+#ifdef MACHINE_MAIN
+
+int main(int argc, char const *argv[]) {
   machine_t *m = machine_new(argv[1]);
   if (!m)
-    return 1;
+    exit(EXIT_FAILURE);
   machine_print_params(m);
   machine_free(m);
+  return 0;
 }
 
 #endif

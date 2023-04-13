@@ -6,10 +6,10 @@
 //
 #include "block.h"
 #include "defines.h"
+#include "machine.h"
 #include <ctype.h> // toupper()
 #include <math.h>
 #include <sys/param.h> // MIN()
-
 
 //   ____            _                 _   _
 //  |  _ \  ___  ___| | __ _ _ __ __ _| |_(_) ___  _ __  ___
@@ -28,31 +28,31 @@ typedef struct {
 
 // Object struct (opaque)
 typedef struct block {
-  char *line;              // G-code string
-  block_type_t type;       // block type
-  size_t n;                // block number
-  size_t tool;             // tool number
-  data_t feedrate;         // feedrate in mm/min
-  data_t arc_feedrate;     // actual nominal feedrate along an arc motion
-  data_t spindle;          // spindle rotational speed in RPM
-  point_t *target;         // final coordinate of this block
-  point_t *delta;          // projections
-  point_t *center;         // arc center coordinates
-  data_t length;           // segment of arc length
-  data_t i, j, r;          // arc parameters
-  data_t theta0, dtheta;   // initial and arc angles
-  data_t acc;              // actual acceleration
-  block_profile_t *prof;   // block velocity profile data
-  machine_t *machine;      // machine object
+  char *line;               // G-code string
+  block_type_t type;        // block type
+  size_t n;                 // block number
+  size_t tool;              // tool number
+  data_t feedrate;          // feedrate in mm/min
+  data_t arc_feedrate;      // actual nominal feedrate along an arc motion
+  data_t spindle;           // spindle rotational speed in RPM
+  point_t *target;          // final coordinate of this block
+  point_t *delta;           // projections
+  point_t *center;          // arc center coordinates
+  data_t length;            // segment of arc length
+  data_t i, j, r;           // arc parameters
+  data_t theta0, dtheta;    // initial and arc angles
+  data_t acc;               // actual acceleration
+  block_profile_t *prof;    // block velocity profile data
+  machine_t const *machine; // machine object (holding config data)
   struct block *prev;
   struct block *next;
 } block_t;
 
 // STATIC FUNCTIONS
 static point_t *start_point(block_t *b);
-static int block_arc(block_t *b);
+static int block_set_fields(block_t *b, char cmd, char *argv);
 static void block_compute(block_t *b);
-static int block_set_fields(block_t *b, char cmd, char *arg);
+static int block_arc(block_t *b);
 
 //   _____                 _   _
 //  |  ___|   _ _ __   ___| |_(_) ___  _ __  ___
@@ -61,7 +61,7 @@ static int block_set_fields(block_t *b, char cmd, char *arg);
 //  |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
 //
 // LIFECYCLE
-block_t *block_new(char const *line, block_t *prev, machine_t *machine) {
+block_t *block_new(char const *line, block_t *prev, machine_t const *machine) {
   assert(line);
   // allocate memory
   block_t *b = malloc(sizeof(block_t));
@@ -85,7 +85,7 @@ block_t *block_new(char const *line, block_t *prev, machine_t *machine) {
 
   // machine parameters
   b->machine = machine;
-  b->acc = machine_A(machine);
+  b->acc = machine_A(b->machine);
 
   // fields to be calculated
   b->prof = malloc(sizeof(block_profile_t));
@@ -159,26 +159,27 @@ block_getter(block_t *, next, next);
 
 // METHODS
 
+// we have a G-code line like "N10 G01 X0 Y100  z210.5 F1000 S5000"
 int block_parse(block_t *b) {
   assert(b);
-  char *word, *line, *tofree;
-  point_t *p0;
+  point_t *p0 = NULL;
   int rv = 0;
+  char *word, *line, *tofree;
 
   tofree = line = strdup(b->line);
   if (!line) {
-    eprintf("Could not allocate momory for tokenizing line\n");
+    eprintf("Could not allocate memory for line string\n");
     return -1;
   }
-  // Tokenizing loop
+  // tokenization
   while ((word = strsep(&line, " ")) != NULL) {
-    // word[0] is the command
-    // word+1 is the pointer to the argument as a string
+    // word[0] is the first character (the command)
+    // word + 1 is the string beginning after the forst character
     rv += block_set_fields(b, toupper(word[0]), word + 1);
   }
   free(tofree);
 
-  // inherit modal fields from the previous block
+  // inherit coordinates from previous point
   p0 = start_point(b);
   point_modal(p0, b->target);
   point_delta(p0, b->target, b->delta);
@@ -187,16 +188,15 @@ int block_parse(block_t *b) {
   // deal with motion blocks
   switch (b->type) {
   case LINE:
-    // calculate feed profile
     b->acc = machine_A(b->machine);
     b->arc_feedrate = b->feedrate;
     block_compute(b);
     break;
+
   case ARC_CW:
   case ARC_CCW:
-    // calculate arc coordinates
     if (block_arc(b)) {
-      wprintf("Could not calculate acr coordinates\n");
+      wprintf("Could not calculate arc coordinates\n");
       rv++;
       break;
     }
@@ -211,21 +211,15 @@ int block_parse(block_t *b) {
     // INI file gives A in mm/s^2, feedrate is given in mm/min.
     // A more elegant solution would be to calculate a minimum time soltion
     // for the whole arc, but it is outside the scope.
-    b->arc_feedrate =
-        MIN(b->feedrate, pow(3.0/4.0*pow(machine_A(b->machine),2)*pow(b->r,2), 0.25) * 60);
-    fprintf(stderr, "%f\n%f\n%f\n%f\n%f\n", 
-      pow(machine_A(b->machine),2), 
-      pow(b->r,2), 
-      pow(3.0/4.0*pow(machine_A(b->machine),2)*pow(b->r,2), 0.25), 
-      pow(3.0/4.0*pow(machine_A(b->machine),2)*pow(b->r,2), 0.25) * 60,
-      b->arc_feedrate);
-    // calculate feed profile
+    b->arc_feedrate = MIN(
+        b->feedrate,
+        pow(3.0 / 4.0 * pow(machine_A(b->machine), 2) * pow(b->r, 2), 0.25) *
+            60);
     block_compute(b);
     break;
   default:
     break;
   }
-  // return number of parsing errors
   return rv;
 }
 
@@ -271,22 +265,27 @@ point_t *block_interpolate(block_t *b, data_t lambda) {
   point_t *result = machine_setpoint(b->machine);
   point_t *p0 = start_point(b);
 
+  // Parametric equations of segment:
+  // x(t) = x(0) + d_x * lambda
+  // y(t) = y(0) + d_y * lambda
   if (b->type == LINE) {
     point_set_x(result, point_x(p0) + point_x(b->delta) * lambda);
     point_set_y(result, point_y(p0) + point_y(b->delta) * lambda);
   }
+  // paremetric equations of arc:
+  // x(t) = x_c + R cos(theta_0 + dtheta * lambda)
+  // y(t) = y_c + R sin(theta_0 + dtheta * lambda)
   else if (b->type == ARC_CW || b->type == ARC_CCW) {
-    point_set_x(result, point_x(b->center) + 
-      b->r * cos(b->theta0 + b->dtheta * lambda));
-    point_set_y(result, point_y(b->center) + 
-      b->r * sin(b->theta0 + b->dtheta * lambda));
-  }
-  else {
-    fprintf(stderr, "Unexpected block type!\n");
+    point_set_x(result, point_x(b->center) +
+                            b->r * cos(b->theta0 + b->dtheta * lambda));
+    point_set_y(result, point_y(b->center) +
+                            b->r * sin(b->theta0 + b->dtheta * lambda));
+  } else {
+    wprintf("Unexpected block type\n");
     return NULL;
   }
+  // Z is always linearly intepolated (arc becomes spiral)
   point_set_z(result, point_z(p0) + point_z(b->delta) * lambda);
-
   return result;
 }
 
@@ -303,20 +302,9 @@ static point_t *start_point(block_t *b) {
   return b->prev ? b->prev->target : machine_zero(b->machine);
 }
 
-// Calculate the integer multiple of sampling time; also prvide the rounding
-// amount in dq
-static data_t quantize(data_t t, data_t tq, data_t *dq) {
-  data_t q;
-  q = ((size_t)(t / tq) + 1) * tq;
-  *dq = q - t;
-  return q;
-}
-
-// Parse a single G-code word (cmd+arg)
 static int block_set_fields(block_t *b, char cmd, char *arg) {
   assert(b && arg);
-  switch (cmd)
-  {
+  switch (cmd) {
   case 'N':
     b->n = atol(arg);
     break;
@@ -332,7 +320,7 @@ static int block_set_fields(block_t *b, char cmd, char *arg) {
   case 'Z':
     point_set_z(b->target, atof(arg));
     break;
-  case 'I': 
+  case 'I':
     b->i = atof(arg);
     break;
   case 'J':
@@ -346,24 +334,69 @@ static int block_set_fields(block_t *b, char cmd, char *arg) {
     break;
   case 'S':
     b->spindle = atof(arg);
-    break; 
-  case 'T':
-    b->tool = atol(arg);   
     break;
+  case 'T':
+    b->tool = atol(arg);
+    break;
+
   default:
-    fprintf(stderr, "ERROR: Usupported G-code command %c%s\n", cmd, arg);
+    wprintf("Unsupported command %c\n", cmd);
     return 1;
     break;
   }
-  // cannot have R and IJ on the same block
+  // Both R and IJ are specified
   if (b->r && (b->i || b->j)) {
-    fprintf(stderr, "ERROR: Cannot mix R and IJ\n");
+    wprintf("Cannot mix R and I,J\n");
     return 1;
   }
   return 0;
 }
 
+static data_t quantize(data_t t, data_t tq, data_t *dq) {
+  data_t q;
+  q = ((size_t)(t / tq) + 1) * tq;
+  *dq = q - t;
+  return q;
+}
+
+static void block_compute(block_t *b) {
+  assert(b);
+  data_t A, a, d;
+  data_t dt, dt_1, dt_2, dt_m, dq;
+  data_t f_m, l;
+
+  A = b->acc;
+  f_m = b->arc_feedrate / 60.0;
+  l = b->length;
+  dt_1 = f_m / A;
+  dt_2 = dt_1;
+  dt_m = l / f_m - (dt_1 + dt_2) / 2.0;
+  if (dt_m > 0) { // trapezoidal profile
+    dt = quantize(dt_1 + dt_m + dt_2, machine_tq(b->machine), &dq);
+    dt_m += dq;
+    f_m = (2 * l) / (dt_1 + dt_2 + 2 * dt_m);
+  } else { // triangular profile (short block)
+    dt_1 = dt_2 = sqrt(l / A);
+    dt = quantize(dt_1 + dt_2, machine_tq(b->machine), &dq);
+    dt_m = 0;
+    dt_2 += dq;
+    f_m = 2 * l / (dt_1 + dt_2);
+  }
+  a = f_m / dt_1;
+  d = -(f_m / dt_2);
+  // copy back values into block object
+  b->prof->dt_1 = dt_1;
+  b->prof->dt_2 = dt_2;
+  b->prof->dt_m = dt_m;
+  b->prof->a = a;
+  b->prof->d = d;
+  b->prof->f = f_m;
+  b->prof->dt = dt;
+  b->prof->l = l;
+}
+
 // Calculate the arc coordinates
+// see slides pages 107-109
 static int block_arc(block_t *b) {
   data_t x0, y0, z0, xc, yc, xf, yf, zf, r;
   point_t *p0 = start_point(b);
@@ -419,97 +452,53 @@ static int block_arc(block_t *b) {
   return 0;
 }
 
-static void block_compute(block_t *b) {
-  assert(b);
-  data_t A, a, d;
-  data_t dt, dt_1, dt_2, dt_m, dq;
-  data_t f_m, l;
 
-  A = b->acc;
-  f_m = b->arc_feedrate / 60.0;
-  l = b->length;
-  dt_1 = f_m / A;
-  dt_2 = dt_1;
-  dt_m = l /f_m - (dt_1 + dt_2) / 2.0;
-  if (dt_m > 0) { // trapezoidal profile
-    dt = quantize(dt_1 + dt_m + dt_2, machine_tq(b->machine), &dq);
-    dt_m += dq; 
-    f_m = (2 * l) / (dt_1 + dt_2 + 2 * dt_m);
-  }
-  else { // triangular profile (short block)
-    dt_1 = sqrt(l / A);
-    dt_2 = dt_1;
-    dt = quantize(dt_1 + dt_2, machine_tq(b->machine), &dq);
-    dt_m = 0;
-    dt_2 += dq;
-    f_m = 2 * l / (dt_1 + dt_2);
-  }
-  a = f_m / dt_1;
-  d = -(f_m / dt_2);
-  // set calculated values in block object
-  b->prof->dt_1 = dt_1;
-  b->prof->dt_2 = dt_2;
-  b->prof->dt_m = dt_m;
-  b->prof->a = a;
-  b->prof->d = d;
-  b->prof->f = f_m;
-  b->prof->dt = dt;
-  b->prof->l = l;
-}
+//   _____         _                     _
+//  |_   _|__  ___| |_   _ __ ___   __ _(_)_ __
+//    | |/ _ \/ __| __| | '_ ` _ \ / _` | | '_ \ 
+//    | |  __/\__ \ |_  | | | | | | (_| | | | | |
+//    |_|\___||___/\__| |_| |_| |_|\__,_|_|_| |_|
 
-//   __  __       _
-//  |  \/  | __ _(_)_ __
-//  | |\/| |/ _` | | '_ \
-//  | |  | | (_| | | | | |
-//  |_|  |_|\__,_|_|_| |_|
-//
-// use the following for stripping the colors:
-// alias nocolor="sed -e $'s/\x1b\[[0-9;]*m//g'"
-// build/block | nocolor > out.txt
 #ifdef BLOCK_MAIN
 int main(int argc, char const *argv[]) {
-  block_t *b1 = NULL, *b2 = NULL, *b3 = NULL, *b4 = NULL, *b5 = NULL;
-  machine_t *cfg = machine_new(argv[1]);
-  if (!cfg) exit(EXIT_FAILURE);
+  machine_t *m = machine_new(argv[1]);
+  block_t *b1 = NULL, *b2 = NULL, *b3 = NULL, *b4 = NULL;
+  if (!m) {
+    eprintf("Error creating machine\n");
+    exit(EXIT_FAILURE);
+  }
 
-  b1 = block_new("N10 G01 X90 Y90 Z100 t3 F1000", NULL, cfg);
+  b1 = block_new("N10 G01 X90 Y90 Z100 T3 F1000", NULL, m);
   block_parse(b1);
-  b2 = block_new("N20 G01 Y100 X100 F1000 S2000", b1, cfg);
+  b2 = block_new("N20 G01 y100 S2000", b1, m);
   block_parse(b2);
-  b3 = block_new("N30 G01 Y200", b2, cfg);
+  b3 = block_new("N30 G01 Y200", b2, m);
   block_parse(b3);
-  b4 = block_new("N40 G01 X0 Y0 Z0", b3, cfg);
+  b4 = block_new("N40 G01 x0 y0 z0", b3, m);
   block_parse(b4);
-  b5 = block_new("N50 G02 X100 Y100 Z0 I100 J0 F7000", b4, cfg);
-  block_parse(b5);
 
   block_print(b1, stderr);
   block_print(b2, stderr);
   block_print(b3, stderr);
   block_print(b4, stderr);
-  block_print(b5, stderr);
 
-  wprintf("Interpolating block b5 (duration %f s):\n", block_dt(b5));
+  wprintf("Intepolation of block 20 (duration: %f)\n", block_dt(b2));
   {
-    data_t t = 0, lambda = 0, v = 0;
-    data_t tq = machine_tq(cfg);
-    data_t dt = block_dt(b5);
+    data_t t = 0, tq = machine_tq(m), dt = block_dt(b2);
+    data_t lambda = 0, v = 0;
     point_t *pos;
-    char *desc = NULL;
     printf("t lambda v x y z\n");
-    for (t = 0; t <= dt + tq/10; t += tq) {
-      lambda = block_lambda(b5, t, &v);
-      pos = block_interpolate(b5, lambda);
-      point_inspect(pos, &desc);
-      printf("%f %f %f %f %f %f %s\n", t, lambda, v, point_x(pos), point_y(pos), point_z(pos), desc);
+    for (t = 0; /*exercise*/; t += tq) {
+      // Exercise
     }
-    free(desc);
   }
 
   block_free(b1);
   block_free(b2);
   block_free(b3);
-  machine_free(cfg);
+  block_free(b4);
+  machine_free(m);
   return 0;
 }
+
 #endif

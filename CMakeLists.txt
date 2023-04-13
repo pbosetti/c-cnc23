@@ -77,7 +77,7 @@ add_library(c-cnc_static STATIC ${LIB_SOURCES})
 add_executable(hello ${SOURCE_DIR}/main/hello.c)
 add_executable(point ${SOURCE_DIR}/point.c)
 target_compile_definitions(point PUBLIC POINT_MAIN)
-add_executable(machine ${SOURCE_DIR}/machine.c ${SOURCE_DIR}/point.c  ${SOURCE_DIR}/toml.c)
+add_executable(machine ${LIB_SOURCES})
 target_compile_definitions(machine PUBLIC MACHINE_MAIN)
 add_executable(block ${LIB_SOURCES})
 target_compile_definitions(block PUBLIC BLOCK_MAIN)
@@ -86,8 +86,8 @@ target_compile_definitions(block PUBLIC BLOCK_MAIN)
 target_link_libraries(hello c-cnc)
 target_link_libraries(c-cnc m)
 target_link_libraries(point m)
-target_link_libraries(block m)
 target_link_libraries(machine m)
+target_link_libraries(block m)
 
 
 #   _____           _        _ _ 
