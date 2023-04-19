@@ -481,7 +481,7 @@ int main(int argc, char const *argv[]) {
     data_t t = 0, tq = machine_tq(m), dt = block_dt(b2);
     data_t lambda = 0, v = 0;
     printf("t lambda v x y z\n");
-    for (t = 0; t <= dt; t += tq) {
+    for (t = 0; t - dt <= tq/10.0; t += tq) {
       lambda = block_lambda(b2, t, &v);
       block_interpolate(b2, lambda);
       printf("%f %f %f %.3f %.3f %.3f\n", t, lambda, v, 
