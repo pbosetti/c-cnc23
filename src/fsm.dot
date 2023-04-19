@@ -1,0 +1,30 @@
+# Finite State Machine for the C-CNC main executable
+# generate with the command:
+# gv_fsm src/fsm.dot -o src/fsm -l -k stop -p C-CNC -d "Finite State Machine for the C-CNC controller" -x ccnc
+digraph "C-CNC" {
+  # List of states
+  init [peripheries=2]
+  idle
+  load_block
+  no_motion
+  rapid_motion
+  interp_motion
+  stop [peripheries=2]
+
+  # List of transitions
+  init -> idle
+  init -> stop
+  idle -> idle
+  idle -> load_block [label="reset"]
+  load_block -> no_motion
+  no_motion -> load_block
+  load_block -> rapid_motion [label="begin_rapid"]
+  rapid_motion -> rapid_motion
+  rapid_motion -> load_block [label="end_rapid"]
+  load_block -> interp_motion [label="begin_interp"]
+  interp_motion -> interp_motion
+  interp_motion -> load_block
+  load_block -> idle
+  idle -> stop
+
+}
