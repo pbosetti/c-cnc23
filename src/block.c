@@ -441,7 +441,7 @@ static int block_arc(block_t *b) {
     b->dtheta = -(2 * M_PI - b->dtheta);
   //
   b->length = hypot(zf - z0, b->dtheta * b->r);
-  // from now on , it's safer to drop radius angle
+  // from now on, it's safer to drop the sign of radius angle
   b->r = fabs(b->r);
   return 0;
 }
@@ -480,10 +480,14 @@ int main(int argc, char const *argv[]) {
   {
     data_t t = 0, tq = machine_tq(m), dt = block_dt(b2);
     data_t lambda = 0, v = 0;
-    point_t *pos;
     printf("t lambda v x y z\n");
-    for (t = 0; /*exercise*/; t += tq) {
-      // Exercise
+    for (t = 0; t <= dt; t += tq) {
+      lambda = block_lambda(b2, t, &v);
+      block_interpolate(b2, lambda);
+      printf("%f %f %f %.3f %.3f %.3f\n", t, lambda, v, 
+        point_x(machine_setpoint(m)),
+        point_y(machine_setpoint(m)),
+        point_z(machine_setpoint(m)));
     }
   }
 
