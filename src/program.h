@@ -32,13 +32,13 @@ typedef struct program program_t;
 //  |  _|| |_| | | | | (__| |_| | (_) | | | \__ \
 //  |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
                                               
-// Lifecycle functions
+// Lifecycle functions =========================================================
 program_t *program_new(char const *filename);
 void program_free(program_t *program);
 void program_print(program_t *program, FILE *output);
 
 
-// Accessors
+// Accessors ===================================================================
 size_t program_length(program_t const *p);
 block_t *program_current(program_t const *p);
 block_t *program_first(program_t const *p);
@@ -46,7 +46,7 @@ block_t *program_last(program_t const *p);
 char *program_filename(program_t const *p);
 
 
-// Processing
+// Processing ==================================================================
 int program_parse(program_t *program, machine_t *machine);
 block_t *program_next(program_t *program);
 void program_reset(program_t *program);

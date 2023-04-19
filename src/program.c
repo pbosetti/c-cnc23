@@ -11,17 +11,32 @@
 #include <stdlib.h>
 #include <string.h>
 
+//   _____                      
+//  |_   _|   _ _ __   ___  ___ 
+//    | || | | | '_ \ / _ \/ __|
+//    | || |_| | |_) |  __/\__ \
+//    |_| \__, | .__/ \___||___/
+//        |___/|_|              
+
 // Object structure:
 typedef struct program {
-  char *filename;
-  FILE *file;
-  block_t *first, *current, *last;
-  size_t n;
+  char *filename;                  // path to the G-code program file
+  FILE *file;                      // file pointer
+  block_t *first, *current, *last; // relevant blocks in the linked list
+  size_t n;                        // total number of blocks inthe program
 } program_t;
 
-// Lifecycle
+//   _____                 _   _                 
+//  |  ___|   _ _ __   ___| |_(_) ___  _ __  ___ 
+//  | |_ | | | | '_ \ / __| __| |/ _ \| '_ \/ __|
+//  |  _|| |_| | | | | (__| |_| | (_) | | | \__ \
+//  |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
+                                              
+
+// Lifecycle ===================================================================
 program_t *program_new(char const *filename) {
   program_t *p = malloc(sizeof(*p));
+  // checks
   if (!p) {
     eprintf("Could not create program\n");
     return NULL;
@@ -59,13 +74,15 @@ void program_free(program_t *p) {
 void program_print(program_t *p, FILE *output) {
   assert(p && output);
   block_t *b = p->first;
+  // print each block from first to last
   do {
     block_print(b, output);
     b = block_next(b);
   } while (b);
 }
 
-// Accessors
+
+// Accessors ===================================================================
 #define program_getter(typ, par, name)                                         \
   typ program_##name(program_t const *p) {                                     \
     assert(p);                                                                 \
@@ -78,7 +95,10 @@ program_getter(block_t *, current, current);
 program_getter(block_t *, last, last);
 program_getter(size_t, n, length);
 
-// Processing
+
+// Processing ==================================================================
+
+// Loop over each block and parse it
 int program_parse(program_t *p, machine_t *machine) {
   assert(p && machine);
   char *line = NULL;
@@ -87,22 +107,25 @@ int program_parse(program_t *p, machine_t *machine) {
   block_t *b;
   p->n = 0;
 
+  // open the g-code file
   p->file = fopen(p->filename, "r");
   if (!p->file) {
     eprintf("Cannot open the file %s\n", p->filename);
     return -1;
   }
-
+  // make a loop: for each line in the file, create a new block with it
   p->n = 0;
   while ((line_len = getline(&line, &n, p->file)) >= 0) {
     // remove trailing newline \n replacing it with a string terminator \0
     if (line[line_len - 1] == '\n') {
       line[line_len - 1] = '\0';
     }
+    // create a new block
     if (!(b = block_new(line, p->last, machine))) {
       eprintf("Error creating a block from line %s\n", line);
       return -1;
     }
+    // parse the block
     if (block_parse(b)) {
       eprintf("Error parsing the block %s\n", line);
       return -1;
@@ -113,12 +136,14 @@ int program_parse(program_t *p, machine_t *machine) {
     p->last = b;
     p->n++;
   }
+  // cleanup
   fclose(p->file);
   free(line);
   program_reset(p);
   return p->n;
 }
 
+// load the next block
 block_t *program_next(program_t *p) {
   assert(p);
   if (p->current == NULL) {
@@ -134,6 +159,15 @@ void program_reset(program_t *p) {
   p->current = NULL;
 }
 
+
+
+
+//   _____         _   
+//  |_   _|__  ___| |_ 
+//    | |/ _ \/ __| __|
+//    | |  __/\__ \ |_ 
+//    |_|\___||___/\__|
+                    
 #ifdef PROGRAM_MAIN
 int main(int argc, char const *argv[]) {
   machine_t *m = NULL;

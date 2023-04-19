@@ -31,12 +31,12 @@ typedef struct point point_t;
 //  |  _|| |_| | | | | (__| |_| | (_) | | | \__ \
 //  |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
 
-// LIFECYCLE (instance creation/destruction)
+// LIFECYCLE (instance creation/destruction) ===================================
 point_t *point_new();
 void point_free(point_t *p);
 void point_inspect(point_t const *p, char **desc);
 
-// ACCESSORS (getting/setting object fields)
+// ACCESSORS (getting/setting object fields) ===================================
 // setters
 void point_set_x(point_t *p, data_t x);
 void point_set_y(point_t *p, data_t y);
@@ -47,7 +47,7 @@ data_t point_x(point_t const *p);
 data_t point_y(point_t const *p);
 data_t point_z(point_t const *p);
 
-// METHODS (Functuions that operate on an object)
+// METHODS (Functions that operate on an object) ===============================
 data_t point_dist(point_t const *from, point_t const *to);
 void point_delta(point_t const *from, point_t const *to, point_t *delta);
 void point_modal(point_t const *from, point_t *to);

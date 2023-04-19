@@ -30,7 +30,7 @@ typedef struct machine {
 //  |  _|| |_| | | | | (__| |_| | (_) | | | \__ \
 //  |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
 
-// LIFECYCLE
+// LIFECYCLE ===================================================================
 
 machine_t *machine_new(char const *cfg_path) {
   machine_t *m = NULL;
@@ -122,7 +122,9 @@ void machine_free(machine_t *m) {
   free(m);
 }
 
-// ACCESSORS
+
+// ACCESSORS ===================================================================
+
 #define machine_getter(typ, par)                                               \
   typ machine_##par(machine_t const *m) {                                      \
     assert(m);                                                                 \
@@ -137,7 +139,9 @@ machine_getter(point_t *, zero);
 machine_getter(point_t *, setpoint);
 machine_getter(point_t *, position);
 
-// METHODS
+
+// METHODS =====================================================================
+
 void machine_print_params(machine_t const *m) {
   printf(BGRN "Machine parameters:\n" CRESET);
   printf(BBLK "C-CNC:A:         " CRESET "%f\n", m->A);

@@ -60,7 +60,7 @@ static int block_arc(block_t *b);
 //  |  _|| |_| | | | | (__| |_| | (_) | | | \__ \
 //  |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
 //
-// LIFECYCLE
+// LIFECYCLE ===================================================================
 block_t *block_new(char const *line, block_t *prev, machine_t const *machine) {
   assert(line);
   // allocate memory
@@ -139,7 +139,7 @@ void block_print(block_t *b, FILE *out) {
   free(end);
 }
 
-// ACCESSORS (all getters)
+// ACCESSORS (all getters) =====================================================
 
 #define block_getter(typ, par, name)                                           \
   typ block_##name(block_t const *b) {                                         \
@@ -158,7 +158,8 @@ block_getter(point_t *, center, center);
 block_getter(point_t *, target, target);
 block_getter(block_t *, next, next);
 
-// METHODS
+
+// METHODS =====================================================================
 
 // we have a G-code line like "N10 G01 X0 Y100  z210.5 F1000 S5000"
 int block_parse(block_t *b) {
