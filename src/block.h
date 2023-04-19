@@ -38,13 +38,13 @@ typedef enum {
 //  |  _|| |_| | | | | (__| |_| | (_) | | | \__ \
 //  |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
                                               
-// LIFECYCLE
+// LIFECYCLE ===================================================================
 block_t *block_new(char const *line, block_t *prev, machine_t const *machine);
 void block_free(block_t *b);
 void block_print(block_t *b, FILE *out);
 
 
-// ACCESSORS (all getters)
+// ACCESSORS (all getters) =====================================================
 data_t block_length(block_t const *b);
 data_t block_dtheta(block_t const *b);
 data_t block_dt(block_t const *b);
@@ -58,7 +58,7 @@ point_t *block_target(block_t const *b);
 
 
 
-// METHODS
+// METHODS =====================================================================
 
 int block_parse(block_t *b);
 data_t block_lambda(block_t *b, data_t time, data_t *v);

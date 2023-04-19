@@ -20,7 +20,7 @@ typedef struct point {
 //  |  _|| |_| | | | | (__| |_| | (_) | | | \__ \
 //  |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
 
-// LIFECYCLE (instance creation/destruction)
+// LIFECYCLE (instance creation/destruction) ===================================
 
 point_t *point_new() {
   point_t *p = malloc(sizeof(point_t));
@@ -69,7 +69,7 @@ void point_inspect(point_t const *p, char **desc) {
 #undef FIELD_SIZE
 #undef FORMAT
 
-// ACCESSORS (getting/setting object fields)
+// ACCESSORS (getting/setting object fields) ===================================
 
 // This is the NON_DRY version of setters/getters definition: it is repetitive
 // and error prone, so we keep it here for the sake of understanding, but it
@@ -154,7 +154,7 @@ void point_set_xyz(point_t *p, data_t x, data_t y, data_t z) {
   p->s = XYZ_SET;
 }
 
-// METHODS (Functions that operate on an object)
+// METHODS (Functions that operate on an object) ===============================
 
 data_t point_dist(point_t const *from, point_t const *to) {
   assert(from && to);
@@ -180,6 +180,13 @@ void point_modal(point_t const *from, point_t *to) {
   }
 }
 
+
+//   _____         _   
+//  |_   _|__  ___| |_ 
+//    | |/ _ \/ __| __|
+//    | |  __/\__ \ |_ 
+//    |_|\___||___/\__|
+                    
 // This main function is conditionally enabled for testing purpose only.
 #ifdef POINT_MAIN
 int main(int argc, char const *argv[]) {
