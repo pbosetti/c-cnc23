@@ -70,7 +70,7 @@ configure_file(
 #                 |___/              
 # Libraries
 # All files in /src (except src/main) are compiled into a library
-add_library(c-cnc SHARED ${LIB_SOURCES})
+add_library(c-cnc_lib SHARED ${LIB_SOURCES})
 add_library(c-cnc_static STATIC ${LIB_SOURCES})
 
 # Executables
@@ -85,9 +85,12 @@ target_compile_definitions(machine PUBLIC MACHINE_MAIN)
 add_executable(program ${LIB_SOURCES})
 target_compile_definitions(program PUBLIC PROGRAM_MAIN)
 
+add_executable(c-cnc ${SOURCE_DIR}/main/c-cnc.c)
+target_link_libraries(c-cnc c-cnc_static m)
+
 # Linking
-target_link_libraries(hello c-cnc)
-target_link_libraries(c-cnc m)
+target_link_libraries(hello c-cnc_lib)
+target_link_libraries(c-cnc_lib m)
 target_link_libraries(point m)
 target_link_libraries(machine m)
 target_link_libraries(block m)

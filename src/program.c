@@ -11,12 +11,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-//   _____                      
-//  |_   _|   _ _ __   ___  ___ 
+//   _____
+//  |_   _|   _ _ __   ___  ___
 //    | || | | | '_ \ / _ \/ __|
 //    | || |_| | |_) |  __/\__ \
 //    |_| \__, | .__/ \___||___/
-//        |___/|_|              
+//        |___/|_|
 
 // Object structure:
 typedef struct program {
@@ -26,12 +26,11 @@ typedef struct program {
   size_t n;                        // total number of blocks inthe program
 } program_t;
 
-//   _____                 _   _                 
-//  |  ___|   _ _ __   ___| |_(_) ___  _ __  ___ 
+//   _____                 _   _
+//  |  ___|   _ _ __   ___| |_(_) ___  _ __  ___
 //  | |_ | | | | '_ \ / __| __| |/ _ \| '_ \/ __|
 //  |  _|| |_| | | | | (__| |_| | (_) | | | \__ \
 //  |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
-                                              
 
 // Lifecycle ===================================================================
 program_t *program_new(char const *filename) {
@@ -81,7 +80,6 @@ void program_print(program_t *p, FILE *output) {
   } while (b);
 }
 
-
 // Accessors ===================================================================
 #define program_getter(typ, par, name)                                         \
   typ program_##name(program_t const *p) {                                     \
@@ -94,7 +92,6 @@ program_getter(block_t *, first, first);
 program_getter(block_t *, current, current);
 program_getter(block_t *, last, last);
 program_getter(size_t, n, length);
-
 
 // Processing ==================================================================
 
@@ -159,19 +156,20 @@ void program_reset(program_t *p) {
   p->current = NULL;
 }
 
-
-
-
-//   _____         _   
-//  |_   _|__  ___| |_ 
+//   _____         _
+//  |_   _|__  ___| |_
 //    | |/ _ \/ __| __|
-//    | |  __/\__ \ |_ 
+//    | |  __/\__ \ |_
 //    |_|\___||___/\__|
-                    
+
 #ifdef PROGRAM_MAIN
 int main(int argc, char const *argv[]) {
   machine_t *m = NULL;
   program_t *p = NULL;
+  block_t *curr_b = NULL;
+  data_t t, tt = 0, tq, lambda, v, dt;
+  point_t *pos = NULL;
+
   if (argc != 3) {
     eprintf("I need exactly two arguments: g-code filename and INI filename\n");
     exit(EXIT_FAILURE);
@@ -186,10 +184,29 @@ int main(int argc, char const *argv[]) {
     eprintf("Could not create program\n");
     exit(EXIT_FAILURE);
   }
-  program_parse(p, m);
-  program_print(p, stdout);
-
-
+  if (program_parse(p, m) < 0) {
+    eprintf("Could not parse program\n");
+    exit(EXIT_FAILURE);
+  }
+  program_print(p, stderr);
+  
+  tq = machine_tq(m);
+  // ------ Run program ------ //
+  program_reset(p);
+  printf("# N t tt lambda s v X Y Z\n");
+  while ((curr_b = program_next(p))) {
+    if (block_type(curr_b) == RAPID)
+      continue;
+    dt = block_dt(curr_b);
+    for (t = 0; t <= dt + tq/10.0; t += tq, tt += tq) {
+      lambda = block_lambda(curr_b, t, &v);
+      pos = block_interpolate(curr_b, lambda);
+      if (!pos) 
+        continue;
+      printf("%lu %.3f %.3f %.6f %.3f %.3f %.3f %.3f %.3f\n", block_n(curr_b), t, tt, lambda, lambda * block_length(curr_b), v, point_x(pos), point_y(pos), point_z(pos));
+    }
+  }
+  // ------------------------- //
 
   program_free(p);
   machine_free(m);
