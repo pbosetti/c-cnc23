@@ -48,6 +48,15 @@ set(CMAKE_C_STANDARD 11)
 # folder or in a system path (/usr/lib, /usr/local/lib)
 if(APPLE)
   set(CMAKE_INSTALL_RPATH "@executable_path/../lib")
+  if(EXISTS /usr/local)
+    include_directories(/usr/local/include)
+    link_directories(/usr/local/lib)
+  endif()
+  # on M1 Macs, brew uses /opt/homebrew:
+  if(EXISTS /opt/homebrew)
+    include_directories(/opt/homebrew/include)
+    link_directories(/opt/homebrew/lib)
+  endif()
 else()
   set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib;/usr/local/lib")
 endif()
@@ -70,7 +79,7 @@ configure_file(
 #                 |___/              
 # Libraries
 # All files in /src (except src/main) are compiled into a library
-add_library(c-cnc SHARED ${LIB_SOURCES})
+add_library(c-cnc_lib SHARED ${LIB_SOURCES})
 add_library(c-cnc_static STATIC ${LIB_SOURCES})
 
 # Executables
@@ -85,13 +94,16 @@ target_compile_definitions(machine PUBLIC MACHINE_MAIN)
 add_executable(program ${LIB_SOURCES})
 target_compile_definitions(program PUBLIC PROGRAM_MAIN)
 
+add_executable(c-cnc ${SOURCE_DIR}/main/c-cnc.c)
+target_link_libraries(c-cnc m mosquitto c-cnc_lib)
+
 # Linking
-target_link_libraries(hello c-cnc)
-target_link_libraries(c-cnc m)
+target_link_libraries(hello c-cnc_lib)
+target_link_libraries(c-cnc_lib m mosquitto)
 target_link_libraries(point m)
-target_link_libraries(machine m)
-target_link_libraries(block m)
-target_link_libraries(program m)
+target_link_libraries(machine m mosquitto)
+target_link_libraries(block m mosquitto)
+target_link_libraries(program m mosquitto)
 
 
 #   _____           _        _ _ 

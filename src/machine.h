@@ -9,6 +9,7 @@
 
 #include "defines.h"
 #include "point.h"
+#include <mosquitto.h>
 
 //   _____
 //  |_   _|   _ _ __   ___  ___
@@ -42,5 +43,19 @@ point_t *machine_position(machine_t const *m);
 
 // Methods =====================================================================
 void machine_print_params(machine_t const *m);
+
+typedef void (* machine_on_message)(struct mosquitto *mqt, void *ud, const struct mosquitto_message *msg);
+
+int machine_connect(machine_t *m, machine_on_message callback);
+
+int machine_sync(machine_t *m, int rapid);
+
+int machine_listen_start(machine_t *m);
+
+int machine_listen_stop(machine_t *m);
+
+void machine_listen_update(machine_t *m);
+
+void machine_disconnect(machine_t *m);
 
 #endif // MACHINE_H
