@@ -115,7 +115,7 @@ target_link_libraries(program m mosquitto)
 # List of targets to install
 list(APPEND TARGETS_LIST
   hello
-  c-cnc c-cnc_static
+  c-cnc c-cnc_static c-cnc_lib
 )
 # Destination directory
 set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_LIST_DIR}/products)

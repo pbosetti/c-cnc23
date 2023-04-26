@@ -147,6 +147,11 @@ machine_t *machine_new(char const *cfg_path) {
     T_READ_S(d, m, mqtt, sub_topic);
   }
   toml_free(conf);
+  if (mosquitto_lib_init() != MOSQ_ERR_SUCCESS) {
+    eprintf("Could not initialize Mosquitto library");
+    goto fail;
+  }
+  m->connecting = 1;
   return m;
 
 fail:
@@ -162,6 +167,10 @@ void machine_free(machine_t *m) {
     point_free(m->setpoint);
   if (m->position)
     point_free(m->position);
+  if (m->mqt) {
+    mosquitto_destroy(m->mqt);
+  }
+  mosquitto_lib_cleanup();
   free(m);
 }
 
@@ -203,31 +212,36 @@ void machine_print_params(machine_t const *m) {
 // return value is 0 on success
 int machine_connect(machine_t *m, machine_on_message callback) {
   assert(m);
+  int count = 0;
   m->mqt = mosquitto_new(NULL, 1, m);
   if (!m->mqt) {
-    perror("Could not create MQTT");
-    return 1;
+    perror(BRED"Could not create MQTT"CRESET);
+    return EXIT_FAILURE;
   }
   mosquitto_connect_callback_set(m->mqt, on_connect);
   mosquitto_message_callback_set(m->mqt, callback ? callback : on_message);
   if (mosquitto_connect(m->mqt, m->broker_address, m->broker_port, 60) !=
       MOSQ_ERR_SUCCESS) {
-    perror("Could not connect to broker");
+    perror(BRED"Invalid broker connection parameters"CRESET);
     return 2;
   }
   // wait for connection to establish
   while (m->connecting) {
-    mosquitto_loop(m->mqt, -1, 1);
+    printf("loop: %d\n", mosquitto_loop(m->mqt, -1, 1));
+    if (++count >= 5) {
+      eprintf("Could not connect to broker\n");
+      return EXIT_FAILURE;
+    }
   }
-  return 0;
+  return EXIT_SUCCESS;
 }
 
 int machine_sync(machine_t *m, int rapid) {
   assert(m);
   //  remember that mosquitto_loop must be called in order to comms to happen
   if (mosquitto_loop(m->mqt, 0, 1) != MOSQ_ERR_SUCCESS) {
-    perror("mosquitto_loop error");
-    return 1;
+    perror(BRED"mosquitto_loop error"CRESET);
+    return EXIT_FAILURE;
   }
   // fill up pub_buffer with current set point, comma separated
   // also, compensate for the workpiece offset from the INI file:
@@ -238,33 +252,33 @@ int machine_sync(machine_t *m, int rapid) {
   // send buffer over MQTT
   mosquitto_publish(m->mqt, NULL, m->pub_topic, strlen(m->pub_buffer),
                     m->pub_buffer, 0, 0);
-  return 0;
+  return EXIT_SUCCESS;
 }
 
 int machine_listen_start(machine_t *m) {
   // subscribe to the topic where the machine publishes to
   if (mosquitto_subscribe(m->mqt, NULL, m->sub_topic, 0) != MOSQ_ERR_SUCCESS) {
-    perror("Could not subscribe");
-    return 1;
+    perror(BRED"Could not subscribe"CRESET);
+    return EXIT_FAILURE;
   }
   m->error = m->max_error * 10.0;
-  eprintf("Subscribed to topic %s\n", m->sub_topic);
-  return 0;
+  wprintf("Subscribed to topic %s\n", m->sub_topic);
+  return EXIT_SUCCESS;
 }
 
 int machine_listen_stop(machine_t *m) {
   if (mosquitto_unsubscribe(m->mqt, NULL, m->sub_topic) != MOSQ_ERR_SUCCESS) {
-    perror("Could not unsubscribe");
-    return 1;
+    perror(BRED"Could not unsubscribe"CRESET);
+    return EXIT_FAILURE;
   }
-  eprintf("Unsubscribed from topic %s\n", m->sub_topic);
+  wprintf("Unsubscribed from topic %s\n", m->sub_topic);
   return 0;
 }
 
 void machine_listen_update(machine_t *m) {
   // call mosquitto_loop
   if (mosquitto_loop(m->mqt, 0, 1) != MOSQ_ERR_SUCCESS) {
-    perror("mosquitto_loop error");
+    perror(BRED"mosquitto_loop error"CRESET);
   }
 }
 
@@ -284,7 +298,7 @@ static void on_connect(struct mosquitto *mqt, void *obj, int rc) {
   machine_t *m = (machine_t *)obj;
   // Successful connection
   if (rc == CONNACK_ACCEPTED) {
-    eprintf("-> Connected to %s:%d\n", m->broker_address, m->broker_port);
+    fprintf(stderr, "-> Connected to %s:%d\n", m->broker_address, m->broker_port);
     // subscribe
     if (mosquitto_subscribe(mqt, NULL, m->sub_topic, 0) != MOSQ_ERR_SUCCESS) {
       perror("Could not subscribe");
@@ -306,7 +320,7 @@ static void on_message(struct mosquitto *mqt, void *ud,
   // strrchr returns a pointer to the last occourrence of a given char
   char *subtopic = strrchr(msg->topic, '/') + 1;
 
-  eprintf("<- message: %s:%s\n", msg->topic, (char *)msg->payload);
+  fprintf(stderr, "<- message: %s:%s\n", msg->topic, (char *)msg->payload);
   mosquitto_message_copy(m->msg, msg);
 
   // if the last topic part is "error", then take it as a single value
@@ -334,9 +348,22 @@ static void on_message(struct mosquitto *mqt, void *ud,
 
 int main(int argc, char const *argv[]) {
   machine_t *m = machine_new(argv[1]);
+  int i = 0;
   if (!m)
     exit(EXIT_FAILURE);
   machine_print_params(m);
+  if (machine_connect(m, NULL) != EXIT_SUCCESS) goto fail;
+  machine_listen_start(m);
+
+  while (point_x(machine_position(m)) != 123) {
+    point_set_x(machine_setpoint(m), (data_t)i++);
+    machine_sync(m, 0);
+    usleep(10000);
+  }
+
+  machine_listen_stop(m);
+  machine_disconnect(m);
+fail:
   machine_free(m);
   return 0;
 }
