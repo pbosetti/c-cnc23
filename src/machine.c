@@ -194,18 +194,18 @@ machine_getter(point_t *, position);
 // METHODS =====================================================================
 
 void machine_print_params(machine_t const *m) {
-  printf(BGRN "Machine parameters:\n" CRESET);
-  printf(BBLK "C-CNC:A:             " CRESET "%f\n", m->A);
-  printf(BBLK "C-CNC:tq:            " CRESET "%f\n", m->tq);
-  printf(BBLK "C-CNC:max_error:     " CRESET "%f\n", m->max_error);
-  printf(BBLK "C-CNC:zero:          " CRESET "[%.3f, %.3f %.3f]\n",
+  fprintf(stderr, BGRN "Machine parameters:\n" CRESET);
+  fprintf(stderr, BBLK "C-CNC:A:             " CRESET "%f\n", m->A);
+  fprintf(stderr, BBLK "C-CNC:tq:            " CRESET "%f\n", m->tq);
+  fprintf(stderr, BBLK "C-CNC:max_error:     " CRESET "%f\n", m->max_error);
+  fprintf(stderr, BBLK "C-CNC:zero:          " CRESET "[%.3f, %.3f %.3f]\n",
          point_x(m->zero), point_y(m->zero), point_z(m->zero));
-  printf(BBLK "C-CNC:offset:        " CRESET "[%.3f, %.3f %.3f]\n",
+  fprintf(stderr, BBLK "C-CNC:offset:        " CRESET "[%.3f, %.3f %.3f]\n",
          point_x(m->offset), point_y(m->offset), point_z(m->offset));
-  printf(BBLK "MQTT:broker_address: " CRESET "%s\n", m->broker_address);
-  printf(BBLK "MQTT:broker_port:    " CRESET "%d\n", m->broker_port);
-  printf(BBLK "MQTT:pub_topic:      " CRESET "%s\n", m->pub_topic);
-  printf(BBLK "MQTT:sub_topic:      " CRESET "%s\n", m->sub_topic);
+  fprintf(stderr, BBLK "MQTT:broker_address: " CRESET "%s\n", m->broker_address);
+  fprintf(stderr, BBLK "MQTT:broker_port:    " CRESET "%d\n", m->broker_port);
+  fprintf(stderr, BBLK "MQTT:pub_topic:      " CRESET "%s\n", m->pub_topic);
+  fprintf(stderr, BBLK "MQTT:sub_topic:      " CRESET "%s\n", m->sub_topic);
 }
 
 // MQTT COMMUNICATIONS =========================================================
@@ -226,7 +226,7 @@ int machine_connect(machine_t *m, machine_on_message callback) {
   }
   // wait for the connection to be established
   while (m->connecting) {
-    printf("loop: %d\n", mosquitto_loop(m->mqt, -1, 1));
+    wprintf("loop: %d\n", mosquitto_loop(m->mqt, -1, 1));
     if (++count >= 5) {
       eprintf("Could not connect to broker\n");
       return EXIT_FAILURE;
