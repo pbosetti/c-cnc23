@@ -101,7 +101,7 @@ machine_t *machine_new(char const *cfg_path) {
   if (!d.ok)                                                                   \
     wprintf("Missing %s:%s\n", toml_table_key(tab), #key);                     \
   else {                                                                       \
-    strncpy(machine->key, d.u.s, BUFLEN);                        \
+    strncpy(machine->key, d.u.s, BUFLEN);                                      \
     free(d.u.s);                                                               \
   }
 
