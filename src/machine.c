@@ -221,7 +221,7 @@ int machine_sync(machine_t *m, int rapid) {
     rapid ? "true" : "false"
   );
   // send the buffer:
-  if (mosquitto_publish(m->mqt, NULL, m->pub_buffer, strlen(m->pub_buffer), m->pub_buffer, 0, 0) != MOSQ_ERR_SUCCESS) {
+  if (mosquitto_publish(m->mqt, NULL, m->pub_topic, strlen(m->pub_buffer), m->pub_buffer, 0, 0) != MOSQ_ERR_SUCCESS) {
     perror(BRED"Could not sent message"CRESET);
     return EXIT_FAILURE;
   }
