@@ -190,7 +190,7 @@ int machine_connect(machine_t *m, machine_on_message callback) {
   int count = 0;
   m->mqt = mosquitto_new(NULL, 1, m);
   if (!m->mqt) {
-    perror(CRED"Could not create MQTT"CRESET);
+    perror(BRED"Could not create MQTT"CRESET);
     return EXIT_FAILURE;
   }
   mosquitto_connect_callback_set(m->mqt, on_connect);
