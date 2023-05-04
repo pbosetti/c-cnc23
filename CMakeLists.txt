@@ -98,7 +98,7 @@ add_executable(c-cnc ${SOURCE_DIR}/main/c-cnc.c)
 target_link_libraries(c-cnc c-cnc_static m mosquitto)
 
 # Linking
-target_link_libraries(hello c-cnc_lib)
+target_link_libraries(hello c-cnc_lib mosquitto)
 target_link_libraries(c-cnc_lib m mosquitto)
 target_link_libraries(point m)
 target_link_libraries(machine m mosquitto)

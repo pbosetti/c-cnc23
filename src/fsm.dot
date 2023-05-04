@@ -1,8 +1,14 @@
-# Finite State Machine for the C-CNC main executable
-# generate with the command:
-# gv_fsm src/fsm.dot -o src/fsm -l -k stop -p C-CNC -d "Finite State Machine for the C-CNC controller" -x ccnc
+#    ____       ____ _   _  ____ 
+#   / ___|     / ___| \ | |/ ___|
+#  | |   _____| |   |  \| | |    
+#  | |__|_____| |___| |\  | |___ 
+#   \____|     \____|_| \_|\____|                              
+# Finite state machine description for C-CNC
+# Generate the code with the following command, run from the project root:
+# gv_fsm src/fsm.dot -o src/fsm -p C-CNC -d "Finite state machine for C-CNC" -x ccnc -k stop
 digraph "C-CNC" {
   # List of states
+  # Mark pure sink and pure source states with double border (purely cosmetic)
   init [peripheries=2]
   idle
   load_block
@@ -12,6 +18,7 @@ digraph "C-CNC" {
   stop [peripheries=2]
 
   # List of transitions
+  # Add a label if you want a transition function
   init -> idle
   init -> stop
   idle -> idle
@@ -26,5 +33,4 @@ digraph "C-CNC" {
   interp_motion -> load_block
   load_block -> idle
   idle -> stop
-
 }

@@ -55,8 +55,6 @@ int machine_listen_start(machine_t *m);
 
 int machine_listen_stop(machine_t *m);
 
-// void machine_listen_update(machine_t *m);
-
 void machine_disconnect(machine_t *m);
 
 #endif // MACHINE_H
