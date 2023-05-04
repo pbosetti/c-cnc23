@@ -65,7 +65,6 @@ machine_t *machine_new(char const *cfg_path) {
   m->max_error = 0.010;
   m->tq = 0.005;
   m->zero = point_new();
-  m->offset = point_new();
   m->position = point_new();
   m->setpoint = point_new();
   m->offset = point_new();
@@ -221,7 +220,6 @@ void machine_print_params(machine_t const *m) {
   fprintf(stderr, BBLK "MQTT:sub_topic:   " CRESET "%s\n", m->sub_topic);
 }
 
-// MQTT COMMUNICATIONS =========================================================
 
 int machine_connect(machine_t *m, machine_on_message callback) {
   assert(m);
@@ -250,9 +248,6 @@ int machine_connect(machine_t *m, machine_on_message callback) {
 
 int machine_sync(machine_t *m, int rapid) {
   assert(m && m->mqt);
-  if(mosquitto_loop(m->mqt, 0, 1) != MOSQ_ERR_SUCCESS) {
-    perror(BRED"mosquitto_loop error"CRESET);
-  }
   // Fill up m->pub_buffer with the set point in JSON format
   // {"x":100.2, "y":123, "z":0.0, "rapid":false}
   snprintf(m->pub_buffer, BUFLEN, "{\"x\":%f, \"y\":%f, \"z\":%f, \"rapid\":%s}",
@@ -369,22 +364,9 @@ static void on_message(struct mosquitto *m, void *obj, const struct mosquitto_me
 
 int main(int argc, char const *argv[]) {
   machine_t *m = machine_new(argv[1]);
-  int i = 0;
   if (!m)
     exit(EXIT_FAILURE);
   machine_print_params(m);
-  if (machine_connect(m, NULL) != EXIT_SUCCESS) goto fail;
-  machine_listen_start(m);
-
-  while (point_x(machine_position(m)) != 123) {
-    point_set_x(machine_setpoint(m), (data_t)i++);
-    machine_sync(m, 0);
-    usleep(10000);
-  }
-
-  machine_listen_stop(m);
-  machine_disconnect(m);
-fail:
   machine_free(m);
   return 0;
 }

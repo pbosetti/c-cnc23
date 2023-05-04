@@ -130,9 +130,10 @@ void block_free(block_t *b) {
 void block_print(block_t *b, FILE *out) {
   assert(b && out);
   char *start = NULL, *end = NULL;
-  point_inspect(start_point(b), &start);
+  point_t *p0 = start_point(b);
+  point_inspect(p0, &start);
   point_inspect(b->target, &end);
-  fprintf(out, "%03lu %s->%s F%7.1f S%7.1f T%02lu (G%02d)\n", b->n, start, end,
+  fprintf(out, "%03lu %s->%s F%7.1f S%7.1f T%2lu (G%02d)\n", b->n, start, end,
           b->feedrate, b->spindle, b->tool, b->type);
   free(start);
   free(end);
@@ -237,25 +238,22 @@ data_t block_lambda(block_t *b, data_t t, data_t *v) {
   if (t < 0) {
     r = 0.0;
     *v = 0.0;
-  }
-  else if (t < dt_1) { // acceleration
+  } else if (t < dt_1) { // acceleration
     r = a * pow(t, 2) / 2.0;
     *v = a * t;
-  }
-  else if (t < (dt_1 + dt_m)) { // maintenance
+  } else if (t < dt_1 + dt_m) { // maintenance
     r = f * (dt_1 / 2.0 + (t - dt_1));
     *v = f;
-  }
-  else if (t < (dt_1 + dt_m + dt_2)) { // deceleration
+  } else if (t < dt_1 + dt_m + dt_2) { // deceleration
     data_t t_2 = dt_1 + dt_m;
     r = f * dt_1 / 2.0 + f * (dt_m + t - t_2) +
-      d / 2.0 * (pow(t, 2) + pow(t_2, 2)) - d * t * t_2;
-    *v = f + d * (t - dt_1 - dt_m);
-  }
-  else {
+        d / 2.0 * (pow(t, 2) + pow(t_2, 2)) - d * t * t_2;
+    *v = f + d * (t - t_2);
+  } else {
     r = b->prof->l;
-    *v = 0;
+    *v = 0.0;
   }
+
   r /= b->prof->l;
   *v *= 60; // convert to mm/min
   return r;

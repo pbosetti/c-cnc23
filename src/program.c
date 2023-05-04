@@ -45,7 +45,7 @@ program_t *program_new(char const *filename) {
     free(p);
     return NULL;
   }
-  // Initialize fields
+  // initialize fields
   p->filename = strdup(filename);
   p->first = NULL;
   p->last = NULL;

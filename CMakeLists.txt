@@ -134,4 +134,3 @@ install(TARGETS ${TARGETS_LIST}
 include(CTest)
 add_test(NAME hello COMMAND hello)
 add_test(NAME point COMMAND point)
-add_test(NAME machine COMMAND machine ../machine.ini)

@@ -7,8 +7,7 @@
   "settings": {
     "C_Cpp.default.defines": [
       "STATS_MAIN=1",
-      "POINT_MAIN=1",
-      "BLOCK_MAIN=1"
+      "POINT_MAIN=1"
     ]
   },
   "launch": {
