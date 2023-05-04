@@ -175,6 +175,8 @@ int block_parse(block_t *b) {
   }
   // tokenization
   while ((word = strsep(&line, " ")) != NULL) {
+    // word[0] is the first character (the command)
+    // word + 1 is the string beginning after the forst character
     rv += block_set_fields(b, toupper(word[0]), word + 1);
   }
   free(tofree);
@@ -292,6 +294,8 @@ point_t *block_interpolate(block_t *b, data_t lambda) {
 //   ___) | || (_| | |_| | (__  |  _| |_| | | | | (__| |_| | (_) | | | \__ \
 //  |____/ \__\__,_|\__|_|\___| |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
 
+// Return a reliable previous point, i.e. machine zero if this is the first
+// block
 static point_t *start_point(block_t *b) {
   assert(b);
   return b->prev ? b->prev->target : machine_zero(b->machine);
@@ -496,7 +500,7 @@ int main(int argc, char const *argv[]) {
   block_free(b2);
   block_free(b3);
   block_free(b4);
-
+  machine_free(m);
   return 0;
 }
 

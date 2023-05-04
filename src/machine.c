@@ -237,7 +237,7 @@ int machine_connect(machine_t *m, machine_on_message callback) {
   }
   // wait for the connection to be established
   while (m->connecting) {
-    printf("loop: %d\n", mosquitto_loop(m->mqt, -1, 1));
+    wprintf("loop: %d\n", mosquitto_loop(m->mqt, -1, 1));
     if (++count >= 5) {
       eprintf("Could not connect to broker\n");
       return EXIT_FAILURE;
