@@ -243,9 +243,9 @@ int machine_sync(machine_t *m, int rapid) {
   // Fill up m->pub_buffer with the set point in JSON format
   // {"x":100.2, "y":123, "z":0.0, "rapid":false}
   snprintf(m->pub_buffer, BUFLEN, "{\"x\":%f, \"y\":%f, \"z\":%f, \"rapid\":%s}",
-    point_x(m->setpoint),
-    point_y(m->setpoint),
-    point_z(m->setpoint),
+    point_x(m->setpoint) + point_x(m->offset), 
+    point_y(m->setpoint) + point_y(m->offset), 
+    point_z(m->setpoint) + point_z(m->offset),
     rapid ? "true" : "false"
   );
   // send the buffer:
