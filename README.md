@@ -69,7 +69,7 @@ To enable the compilation we need to install a few packages: on the linux consol
 
 ```bash
 sudo apt update
-sudo apt install build-essential make cmake cmake-curses-gui clang clang-format lldb libgsl-dev ruby figlet sshfs
+sudo apt install build-essential make cmake cmake-curses-gui clang clang-format lldb libgsl-dev ruby figlet sshfs graphviz gnuplot
 sudo gem install gv_fsm
 sudo update-alternatives --set c++ /usr/bin/clang++
 sudo update-alternatives --set cc /usr/bin/clang

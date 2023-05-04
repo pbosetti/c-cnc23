@@ -7,8 +7,8 @@
 # Example plot script
 
 # First set output format and file:
-set terminal pngcairo size 800, 600
-set output "plot.png"
+# set terminal pngcairo size 800, 600
+# set output "plot.png"
 
 # then set properties:
 set xlabel 'x'
@@ -17,8 +17,6 @@ set grid
 
 # finally decide what to plot:
 set multiplot layout 2,1
-set xrange [0:7]
-plot sin(x)+2 title "function", \
-  "data.txt" using 1:2 with linespoints title "dataset"
-plot cos(x) title "cosine"
+plot "data.txt" using 3:4 with lines title "lambda"
+plot "data.txt" u 3:6 w l t "Feedrate"
 unset multiplot

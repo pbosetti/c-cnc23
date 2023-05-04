@@ -24,6 +24,7 @@ typedef struct machine {
   data_t max_error, error;       // maximum error and current error
   point_t *zero;                 // machine origin
   point_t *setpoint, *position;  // set point and current position
+  point_t *offset;               // offset of the workpiece reference frame
   char broker_address[BUFLEN];   // internet address of MQTT broker
   int broker_port;               // port of MQTT broker
   char pub_topic[BUFLEN];        // topic where to publish the set point
@@ -66,7 +67,9 @@ machine_t *machine_new(char const *cfg_path) {
   m->zero = point_new();
   m->position = point_new();
   m->setpoint = point_new();
+  m->offset = point_new();
   point_set_xyz(m->zero, 0, 0, 0);
+  point_set_xyz(m->offset, 0, 0, 0);
 
   // Import values form a INI file
   // 1. open the file
@@ -109,6 +112,7 @@ machine_t *machine_new(char const *cfg_path) {
   // Sections must exist; missing keys only give a warning and use the default
   {
     toml_datum_t d;
+    toml_array_t *point;
     toml_table_t *ccnc = toml_table_in(conf, "C-CNC");
     if (!ccnc) {
       eprintf("Missing C-CNC section\n");
@@ -117,6 +121,28 @@ machine_t *machine_new(char const *cfg_path) {
     T_READ_D(d, m, ccnc, A);
     T_READ_D(d, m, ccnc, max_error);
     T_READ_D(d, m, ccnc, tq);
+    // WP origin
+    point = toml_array_in(ccnc, "offset");
+    if (!point) {
+      wprintf("Missing C-CNC:offset, using default");
+    } else {
+      point_set_xyz(m->offset, 
+        toml_double_at(point, 0).u.d,
+        toml_double_at(point, 1).u.d,
+        toml_double_at(point, 2).u.d
+      );
+    }
+    // Machine initial position
+    point = toml_array_in(ccnc, "zero");
+    if (!point) {
+      wprintf("Missing C-CNC:zero, using default");
+    } else {
+      point_set_xyz(m->zero, 
+        toml_double_at(point, 0).u.d,
+        toml_double_at(point, 1).u.d,
+        toml_double_at(point, 2).u.d
+      );
+    }
   }
   {
     toml_datum_t d;
@@ -178,10 +204,20 @@ machine_getter(point_t *, position);
 // METHODS =====================================================================
 
 void machine_print_params(machine_t const *m) {
-  printf(BGRN "Machine parameters:\n" CRESET);
-  printf(BBLK "C-CNC:A:         " CRESET "%f\n", m->A);
-  printf(BBLK "C-CNC:tq:        " CRESET "%f\n", m->tq);
-  printf(BBLK "C-CNC:max_error: " CRESET "%f\n", m->max_error);
+  fprintf(stderr, BGRN "Machine parameters:\n" CRESET);
+  // C-CNC section
+  fprintf(stderr, BBLK "C-CNC:A:          " CRESET "%f\n", m->A);
+  fprintf(stderr, BBLK "C-CNC:tq:         " CRESET "%f\n", m->tq);
+  fprintf(stderr, BBLK "C-CNC:max_error:  " CRESET "%f\n", m->max_error);
+  fprintf(stderr, BBLK "C-CNC:zero        " CRESET "[%.3f, %.3f, %.3f]\n", 
+    point_x(m->zero), point_y(m->zero), point_z(m->zero));
+  fprintf(stderr, BBLK "C-CNC:offset      " CRESET "[%.3f, %.3f, %.3f]\n", 
+    point_x(m->offset), point_y(m->offset), point_z(m->offset));
+  // MQTT section
+  fprintf(stderr, BBLK "MQTT:broker_addr: " CRESET "%s\n", m->broker_address);
+  fprintf(stderr, BBLK "MQTT:broker_port: " CRESET "%d\n", m->broker_port);
+  fprintf(stderr, BBLK "MQTT:pub_topic:   " CRESET "%s\n", m->pub_topic);
+  fprintf(stderr, BBLK "MQTT:sub_topic:   " CRESET "%s\n", m->sub_topic);
 }
 
 
@@ -215,15 +251,18 @@ int machine_sync(machine_t *m, int rapid) {
   // Fill up m->pub_buffer with the set point in JSON format
   // {"x":100.2, "y":123, "z":0.0, "rapid":false}
   snprintf(m->pub_buffer, BUFLEN, "{\"x\":%f, \"y\":%f, \"z\":%f, \"rapid\":%s}",
-    point_x(m->setpoint),
-    point_y(m->setpoint),
-    point_z(m->setpoint),
+    point_x(m->setpoint) + point_x(m->offset),
+    point_y(m->setpoint) + point_y(m->offset),
+    point_z(m->setpoint) + point_z(m->offset),
     rapid ? "true" : "false"
   );
   // send the buffer:
   if (mosquitto_publish(m->mqt, NULL, m->pub_topic, strlen(m->pub_buffer), m->pub_buffer, 0, 0) != MOSQ_ERR_SUCCESS) {
     perror(BRED"Could not sent message"CRESET);
     return EXIT_FAILURE;
+  }
+  if(mosquitto_loop(m->mqt, 0, 1) != MOSQ_ERR_SUCCESS) {
+    perror(BRED"mosquitto_loop error"CRESET);
   }
   return EXIT_SUCCESS;
 }
@@ -249,13 +288,6 @@ int machine_listen_stop(machine_t *m) {
   return EXIT_SUCCESS;
 }
 
-void machine_listen_update(machine_t *m) {
-  assert(m && m->mqt);
-  if(mosquitto_loop(m->mqt, 0, 1) != MOSQ_ERR_SUCCESS) {
-    perror(BRED"mosquitto_loop error"CRESET);
-  }
-}
-
 void machine_disconnect(machine_t *m) {
   assert(m && m->mqt);
   while (mosquitto_want_write(m->mqt)) {
@@ -263,6 +295,7 @@ void machine_disconnect(machine_t *m) {
     usleep(10000);
   }
   mosquitto_disconnect(m->mqt);
+  m->connecting = 1;
 }
 
 
@@ -287,6 +320,36 @@ static void on_connect(struct mosquitto *mqt, void *obj, int rc) {
     exit(EXIT_FAILURE);
   }
   m->connecting = 0;
+}
+
+// messages arrive on the topic c-cnc/status/#
+static void on_message(struct mosquitto *m, void *obj, const struct mosquitto_message *msg) {
+  machine_t *machine = (machine_t *)obj;
+  // find out the topic subpath, by splitting the topic on / and only taking 
+  // the last one:
+  // e.g.: "c-cnc/status/error" -> "/error", + 1 -> "error"
+  char *subtopic = strrchr(msg->topic, '/') + 1;
+  fprintf(stderr, "<- message: %s:%s\n", msg->topic, (char *)msg->payload);
+
+  // make a copy of the message for storing it into machine
+  mosquitto_message_copy(machine->msg, msg);
+
+  // act accoring to the last part of the topic:
+  // c-cnc/status/error
+  if (strcmp(subtopic, "error") == 0) {
+    machine->error = atof(msg->payload);
+  }
+  // c-cnc/status/position
+  else if (strcmp(subtopic, "position") == 0) {
+    // we get a message as "123.5,0.100,200"
+    char *nxt = msg->payload;
+    point_set_x(machine->position, strtod(nxt, &nxt)); // ",0.100,200"
+    point_set_y(machine->position, strtod(nxt + 1, &nxt)); // ",200"
+    point_set_z(machine->position, strtod(nxt + 1, &nxt)); // ""
+  }
+  else {
+    eprintf("Got unexpected message on %s\n", msg->topic);
+  }
 }
 
 
