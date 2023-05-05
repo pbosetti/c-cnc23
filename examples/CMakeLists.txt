@@ -52,3 +52,5 @@ target_link_libraries(9_timed m)
 add_executable(10_timed ${SOURCES}/10_timed.c ${SOURCES}/stats.c)
 target_link_libraries(10_timed m)
 add_executable(12_encoding ${SOURCES}/12_encoding.c)
+
+add_executable(vending ${SOURCES}/fsm.c ${SOURCES}/vending.c)

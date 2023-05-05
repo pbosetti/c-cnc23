@@ -25,10 +25,6 @@ slprj/
 !/examples/*.md
 !/examples/src
 !/examples/include
-!/examples/vending/
-/examples/vending/*
-!/examples/vending/*.h
-!/examples/vending/*.c
 
 # Cmake build directory and generated files
 /*build*
