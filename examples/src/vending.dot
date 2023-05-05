@@ -1,0 +1,31 @@
+# Vending machine
+digraph "Vending Machine" {
+  # List of states
+  init [peripheries=2]
+  idle
+  coin_in
+  stop [peripheries=2]
+  return_coin
+  selection
+  dispensing
+  
+  # List of transitions
+  init->idle
+  
+  idle->idle
+  idle->coin_in
+  idle->stop
+
+  coin_in->coin_in
+  coin_in->return_coin
+  coin_in->selection
+
+  return_coin->idle
+
+  selection->selection
+  selection->dispensing
+
+  dispensing->dispensing
+  dispensing->idle [label="reset"]
+  dispensing->return_coin [label="disable_line"]
+}
