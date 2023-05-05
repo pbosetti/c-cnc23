@@ -26,9 +26,12 @@ jobs:
 
     - name: install mosquitto
       run: |
-        sudo apt-get update
-        sudo apt-get install mosquitto
-        sudo apt-get install mosquitto-clients
+        wget https://mosquitto.org/files/source/mosquitto-2.0.14.tar.gz
+        tar xzf mosquitto-2.0.14.tar.gz
+        cd mosquitto-2.0.14
+        cmake -Bbuild . -DCMAKE_BUILD_TYPE=Release -DWITH_TLS=OFF -DDOCUMENTATION=OFF -DWITH_LIB_CPP=OFF -DWITH_SRV=OFF -DWITH_CJSON=OFF
+        cmake --build build
+        sudo cmake --install build
         
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
