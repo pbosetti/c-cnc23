@@ -44,6 +44,14 @@
         "program": "${workspaceFolder}/build/program",
         "args": ["test.gcode", "machine.ini"],
         "cwd": "${workspaceFolder}"
+      },
+      {
+        "type": "lldb",
+        "request": "launch",
+        "name": "ccnc",
+        "program": "${workspaceFolder}/build/ccnc",
+        "args": ["test.gcode"],
+        "cwd": "${workspaceFolder}"
       }
     ],
     "compounds": []

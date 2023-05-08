@@ -96,6 +96,10 @@ target_compile_definitions(program PUBLIC PROGRAM_MAIN)
 
 add_executable(c-cnc ${SOURCE_DIR}/main/c-cnc.c)
 target_link_libraries(c-cnc c-cnc_static m mosquitto)
+add_executable(ccnc ${SOURCE_DIR}/main/ccnc.c)
+target_link_libraries(ccnc c-cnc_static m mosquitto)
+
+
 
 # Linking
 target_link_libraries(hello c-cnc_lib mosquitto)

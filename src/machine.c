@@ -33,6 +33,7 @@ typedef struct machine {
   struct mosquitto *mqt;         // mosquitto object
   struct mosquitto_message *msg; // mosquitto message structure
   int connecting;                // 1 when disconnected or about to connect
+  data_t rt_pacing;
 } machine_t;
 
 // Callbacks
@@ -196,6 +197,7 @@ machine_getter(data_t, A);
 machine_getter(data_t, tq);
 machine_getter(data_t, max_error);
 machine_getter(data_t, error);
+machine_getter(data_t, rt_pacing);
 machine_getter(point_t *, zero);
 machine_getter(point_t *, setpoint);
 machine_getter(point_t *, position);

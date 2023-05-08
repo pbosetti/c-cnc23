@@ -13,8 +13,11 @@ The finite state machine has:
 Functions and types have been generated with prefix "ccnc_"
 ******************************************************************************/
 
-#include <syslog.h>
 #include "fsm.h"
+#include "block.h"
+#include "point.h"
+#include <unistd.h>
+#include <termios.h>
 
 // Install signal handler: 
 // SIGINT requests a transition to state stop
@@ -23,8 +26,26 @@ static int _exit_request = 0;
 static void signal_handler(int signal) {
   if (signal == SIGINT) {
     _exit_request = 1;
-    syslog(LOG_WARNING, "[FSM] SIGINT transition to stop");
+    wprintf("Exit request!\n");
   }
+}
+
+static char read_key() {
+  char key;
+  struct termios old_tio, new_tio;
+  // save current terminal settings
+  tcgetattr(STDIN_FILENO, &old_tio);
+  // copy setting into new structure
+  new_tio = old_tio;
+  // disable caching 
+  cfmakeraw(&new_tio);
+  // set new settings
+  tcsetattr(STDIN_FILENO, TCSANOW, &new_tio);
+  // wait for keypress
+  key = getchar();
+  // reset initial temrinal setings
+  tcsetattr(STDIN_FILENO, TCSANOW, &old_tio);
+  return key;
 }
 
 // SEARCH FOR Your Code Here FOR CODE INSERTION POINTS!
@@ -53,7 +74,7 @@ transition_func_t *const ccnc_transition_table[CCNC_NUM_STATES][CCNC_NUM_STATES]
   /* load_block    */ {NULL             , NULL             , NULL             , NULL             , NULL             , ccnc_begin_rapid , ccnc_begin_interp}, 
   /* no_motion     */ {NULL             , NULL             , NULL             , NULL             , NULL             , NULL             , NULL             }, 
   /* rapid_motion  */ {NULL             , NULL             , NULL             , ccnc_end_rapid   , NULL             , NULL             , NULL             }, 
-  /* interp_motion */ {NULL             , NULL             , NULL             , NULL             , NULL             , NULL             , NULL             }, 
+  /* interp_motion */ {NULL             , NULL             , NULL             , ccnc_end_interp  , NULL             , NULL             , NULL             }, 
 };
 
 /*  ____  _        _       
@@ -73,17 +94,52 @@ transition_func_t *const ccnc_transition_table[CCNC_NUM_STATES][CCNC_NUM_STATES]
 // valid return states: CCNC_STATE_IDLE, CCNC_STATE_STOP
 ccnc_state_t ccnc_do_init(ccnc_state_data_t *data) {
   ccnc_state_t next_state = CCNC_STATE_IDLE;
+  point_t *sp = NULL, *zero = NULL;
   signal(SIGINT, signal_handler); 
-  
-  syslog(LOG_INFO, "[FSM] In state init");
-  /* Your Code Here */
-  
+    
+  // Steps:
+  // 1. print software version
+  fprintf(stderr, GRN"C-CNC version %s, %s build\n"CRESET, VERSION, BUILD_TYPE);
+
+  // 2. connect to machine
+  data->machine = machine_new(data->ini_file);
+  if (!data->machine) {
+    next_state = CCNC_STATE_STOP;
+    goto next_state;
+  }
+  if (machine_connect(data->machine, NULL) != EXIT_SUCCESS) {
+    next_state = CCNC_STATE_STOP;
+    goto next_state;
+  }
+
+  // 3. load and parse G-code file
+  data->prog = program_new(data->prog_file);
+  if (!data->prog) {
+    next_state = CCNC_STATE_STOP;
+    goto next_state;
+  }
+  if (!program_parse(data->prog, data->machine)) {
+    next_state = CCNC_STATE_STOP;
+    goto next_state;
+  }
+
+  // 4. print parsed file
+  fprintf(stderr, "Current program: "GRN"%s\n"CRESET, data->prog_file);
+  program_print(data->prog, stderr);
+
+  // 5. sync machine to zero
+  sp = machine_setpoint(data->machine);
+  zero = machine_zero(data->machine);
+  point_set_xyz(sp, point_x(zero), point_y(zero), point_z(zero));
+  machine_sync(data->machine, 1);
+
+
+next_state:
   switch (next_state) {
     case CCNC_STATE_IDLE:
     case CCNC_STATE_STOP:
       break;
     default:
-      syslog(LOG_WARNING, "[FSM] Cannot pass from init to %s, remaining in this state", ccnc_state_names[next_state]);
       next_state = CCNC_NO_CHANGE;
   }
   
@@ -96,9 +152,26 @@ ccnc_state_t ccnc_do_init(ccnc_state_data_t *data) {
 // SIGINT triggers an emergency transition to stop
 ccnc_state_t ccnc_do_idle(ccnc_state_data_t *data) {
   ccnc_state_t next_state = CCNC_NO_CHANGE;
+  char key;
   
-  syslog(LOG_INFO, "[FSM] In state idle");
-  /* Your Code Here */
+  fprintf(stderr, "Press "BGRN"spacebar or 'r' to run, "BRED"'q' to quit\n"CRESET);
+  key = read_key();
+  switch (key)
+  {
+  case 'q':
+  case 'Q':
+    next_state = CCNC_STATE_STOP;
+    break;
+  case ' ':
+  case 'r':
+    next_state = CCNC_STATE_LOAD_BLOCK;
+    break;
+  default:
+    break;
+  }
+  data->t_blk = 0;
+  data->t_tot = 0;
+  machine_sync(data->machine, 1);
   
   switch (next_state) {
     case CCNC_NO_CHANGE:
@@ -107,7 +180,6 @@ ccnc_state_t ccnc_do_idle(ccnc_state_data_t *data) {
     case CCNC_STATE_STOP:
       break;
     default:
-      syslog(LOG_WARNING, "[FSM] Cannot pass from idle to %s, remaining in this state", ccnc_state_names[next_state]);
       next_state = CCNC_NO_CHANGE;
   }
   
@@ -123,14 +195,25 @@ ccnc_state_t ccnc_do_idle(ccnc_state_data_t *data) {
 ccnc_state_t ccnc_do_stop(ccnc_state_data_t *data) {
   ccnc_state_t next_state = CCNC_NO_CHANGE;
   
-  syslog(LOG_INFO, "[FSM] In state stop");
-  /* Your Code Here */
+  // Steps:
+  // 1. disconect
+  wprintf("Clean up... ");
+  signal(SIGINT, SIG_DFL);
+  if (data->machine) {
+    machine_disconnect(data->machine);
+  }
+
+  // 2. free resources
+  if (data->prog) {
+    program_free(data->prog);
+    machine_free(data->machine);
+  }
+  fprintf(stderr, "done.\n");
   
   switch (next_state) {
     case CCNC_NO_CHANGE:
       break;
     default:
-      syslog(LOG_WARNING, "[FSM] Cannot pass from stop to %s, remaining in this state", ccnc_state_names[next_state]);
       next_state = CCNC_NO_CHANGE;
   }
   
@@ -142,10 +225,36 @@ ccnc_state_t ccnc_do_stop(ccnc_state_data_t *data) {
 // valid return states: CCNC_STATE_IDLE, CCNC_STATE_NO_MOTION, CCNC_STATE_RAPID_MOTION, CCNC_STATE_INTERP_MOTION
 ccnc_state_t ccnc_do_load_block(ccnc_state_data_t *data) {
   ccnc_state_t next_state = CCNC_STATE_IDLE;
-  
-  syslog(LOG_INFO, "[FSM] In state load_block");
-  /* Your Code Here */
-  
+  block_t *b = NULL;
+
+  b = program_next(data->prog);
+  if (!b) {
+    next_state = CCNC_STATE_IDLE;
+    goto next_state;
+  }
+  block_print(b, stderr);
+  switch (block_type(b))
+  {
+  case NO_MOTION:
+    next_state = CCNC_STATE_NO_MOTION;
+    break;
+
+  case RAPID:
+    next_state = CCNC_STATE_RAPID_MOTION;
+    break;
+
+  case LINE:
+  case ARC_CW:
+  case ARC_CCW:
+    next_state = CCNC_STATE_INTERP_MOTION;
+    break;
+
+  default:
+    next_state = CCNC_STATE_IDLE;
+    break;
+  }
+
+next_state:  
   switch (next_state) {
     case CCNC_STATE_IDLE:
     case CCNC_STATE_NO_MOTION:
@@ -153,7 +262,6 @@ ccnc_state_t ccnc_do_load_block(ccnc_state_data_t *data) {
     case CCNC_STATE_INTERP_MOTION:
       break;
     default:
-      syslog(LOG_WARNING, "[FSM] Cannot pass from load_block to %s, remaining in this state", ccnc_state_names[next_state]);
       next_state = CCNC_NO_CHANGE;
   }
   
@@ -166,14 +274,13 @@ ccnc_state_t ccnc_do_load_block(ccnc_state_data_t *data) {
 ccnc_state_t ccnc_do_no_motion(ccnc_state_data_t *data) {
   ccnc_state_t next_state = CCNC_STATE_LOAD_BLOCK;
   
-  syslog(LOG_INFO, "[FSM] In state no_motion");
+
   /* Your Code Here */
   
   switch (next_state) {
     case CCNC_STATE_LOAD_BLOCK:
       break;
     default:
-      syslog(LOG_WARNING, "[FSM] Cannot pass from no_motion to %s, remaining in this state", ccnc_state_names[next_state]);
       next_state = CCNC_NO_CHANGE;
   }
   
@@ -186,9 +293,17 @@ ccnc_state_t ccnc_do_no_motion(ccnc_state_data_t *data) {
 // SIGINT triggers an emergency transition to stop
 ccnc_state_t ccnc_do_rapid_motion(ccnc_state_data_t *data) {
   ccnc_state_t next_state = CCNC_NO_CHANGE;
-  
-  syslog(LOG_INFO, "[FSM] In state rapid_motion");
-  /* Your Code Here */
+  data_t tq = machine_tq(data->machine);
+  machine_sync(data->machine, 1);
+  data->t_tot += tq;
+  data->t_tot += tq;
+  if (machine_error(data->machine) < machine_max_error(data->machine)) {
+    next_state = CCNC_STATE_LOAD_BLOCK;
+  }
+  if (_exit_request) {
+    _exit_request = 0;
+    next_state = CCNC_STATE_LOAD_BLOCK;
+  }
   
   switch (next_state) {
     case CCNC_NO_CHANGE:
@@ -196,13 +311,12 @@ ccnc_state_t ccnc_do_rapid_motion(ccnc_state_data_t *data) {
     case CCNC_STATE_RAPID_MOTION:
       break;
     default:
-      syslog(LOG_WARNING, "[FSM] Cannot pass from rapid_motion to %s, remaining in this state", ccnc_state_names[next_state]);
       next_state = CCNC_NO_CHANGE;
   }
-  
+    
   // SIGINT transition override
   if (_exit_request) next_state = CCNC_STATE_STOP;
-  
+
   return next_state;
 }
 
@@ -212,17 +326,40 @@ ccnc_state_t ccnc_do_rapid_motion(ccnc_state_data_t *data) {
 // SIGINT triggers an emergency transition to stop
 ccnc_state_t ccnc_do_interp_motion(ccnc_state_data_t *data) {
   ccnc_state_t next_state = CCNC_NO_CHANGE;
+  data_t tq = machine_tq(data->machine);
+  data_t lambda, feed;
+  block_t *b = program_current(data->prog);
+  point_t *sp = NULL;
+
+  data->t_blk += tq;
+  data->t_tot += tq;
+  if (data->t_blk >= block_dt(b) + tq/10.0) {
+    next_state = CCNC_STATE_LOAD_BLOCK;
+    goto next_state;
+  }
+  lambda = block_lambda(b, data->t_blk, &feed);
+  sp = block_interpolate(b, lambda);
+  if (!sp) {
+    next_state = CCNC_STATE_LOAD_BLOCK;
+    goto next_state;
+  }
+  printf("%lu,%f,%f,%f,%f,%f,%f,%f,%f\n", block_n(b), data->t_tot, data->t_blk, lambda, lambda * block_length(b), feed, point_x(sp), point_y(sp), point_z(sp));
+  fprintf(stderr, "\b\b\b\b\b\b\b\b");
+  fflush(stderr);
+  fprintf(stderr, "[%5.1f%%]", lambda*100);
+  machine_sync(data->machine, 0);
   
-  syslog(LOG_INFO, "[FSM] In state interp_motion");
+
   /* Your Code Here */
-  
+
+next_state:
   switch (next_state) {
     case CCNC_NO_CHANGE:
     case CCNC_STATE_LOAD_BLOCK:
     case CCNC_STATE_INTERP_MOTION:
       break;
     default:
-      syslog(LOG_WARNING, "[FSM] Cannot pass from interp_motion to %s, remaining in this state", ccnc_state_names[next_state]);
+
       next_state = CCNC_NO_CHANGE;
   }
   
@@ -249,29 +386,52 @@ ccnc_state_t ccnc_do_interp_motion(ccnc_state_data_t *data) {
 // This function is called in 1 transition:
 // 1. from idle to load_block
 void ccnc_reset(ccnc_state_data_t *data) {
-  syslog(LOG_INFO, "[FSM] State transition ccnc_reset");
-  /* Your Code Here */
+  // Steps:
+  // 1. reset both timers
+  data->t_blk = data->t_tot = 0;
+  // 2. print data header line
+  printf("n,t_tot,t_blk,lambda,s,feed,x,y,z\n");
 }
 
 // This function is called in 1 transition:
 // 1. from load_block to rapid_motion
 void ccnc_begin_rapid(ccnc_state_data_t *data) {
-  syslog(LOG_INFO, "[FSM] State transition ccnc_begin_rapid");
-  /* Your Code Here */
+  point_t *sp = machine_setpoint(data->machine);
+  block_t *b = program_current(data->prog);
+  point_t *target = block_target(b);
+  // Steps:
+  // 1. reset block timer
+  data->t_blk = 0;
+  // 2 call machine_listen_start()
+  machine_listen_start(data->machine);
+  // 3. set final position as set point and use machine_sync
+  point_set_x(sp, point_x(target));
+  point_set_y(sp, point_y(target));
+  point_set_z(sp, point_z(target));
+  machine_sync(data->machine, 1);
 }
 
 // This function is called in 1 transition:
 // 1. from load_block to interp_motion
 void ccnc_begin_interp(ccnc_state_data_t *data) {
-  syslog(LOG_INFO, "[FSM] State transition ccnc_begin_interp");
-  /* Your Code Here */
+  // Steps:
+  // reset block timer
+  data->t_blk = 0;
+  fprintf(stderr, "[  0.0%%]");
 }
 
 // This function is called in 1 transition:
 // 1. from rapid_motion to load_block
 void ccnc_end_rapid(ccnc_state_data_t *data) {
-  syslog(LOG_INFO, "[FSM] State transition ccnc_end_rapid");
-  /* Your Code Here */
+  // Steps:
+  // * call machine_listen_stop()
+  machine_listen_stop(data->machine);
+}
+
+// This function is called in 1 transition:
+// 1. from interp_motion to load_block
+void ccnc_end_interp(ccnc_state_data_t *data) {
+  fprintf(stderr, "\b\b\b\b\b\b\b\b");
 }
 
 
@@ -302,8 +462,6 @@ ccnc_state_t ccnc_run_state(ccnc_state_t cur_state, ccnc_state_data_t *data) {
 #include <unistd.h>
 int main() {
   ccnc_state_t cur_state = CCNC_STATE_INIT;
-  openlog("SM", LOG_PID | LOG_PERROR, LOG_USER);
-  syslog(LOG_INFO, "Starting SM");
   do {
     cur_state = ccnc_run_state(cur_state, NULL);
     sleep(1);
