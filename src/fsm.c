@@ -9,7 +9,7 @@ Generation date: 2023-05-04 13:18:54 +0200
 Generated from: src/fsm.dot
 The finite state machine has:
   7 states
-  4 transition functions
+  5 transition functions
 Functions and types have been generated with prefix "ccnc_"
 ******************************************************************************/
 
@@ -43,7 +43,7 @@ static char read_key() {
   tcsetattr(STDIN_FILENO, TCSANOW, &new_tio);
   // wait for keypress
   key = getchar();
-  // reset initial temrinal setings
+  // reset initial terminal setings
   tcsetattr(STDIN_FILENO, TCSANOW, &old_tio);
   return key;
 }
@@ -206,6 +206,8 @@ ccnc_state_t ccnc_do_stop(ccnc_state_data_t *data) {
   // 2. free resources
   if (data->prog) {
     program_free(data->prog);
+  }
+  if (data->machine) {
     machine_free(data->machine);
   }
   fprintf(stderr, "done.\n");
@@ -226,13 +228,18 @@ ccnc_state_t ccnc_do_stop(ccnc_state_data_t *data) {
 ccnc_state_t ccnc_do_load_block(ccnc_state_data_t *data) {
   ccnc_state_t next_state = CCNC_STATE_IDLE;
   block_t *b = NULL;
+  data_t tq = machine_tq(data->machine);
 
+  // Steps:
+  // 1. Get and print new block:
   b = program_next(data->prog);
   if (!b) {
     next_state = CCNC_STATE_IDLE;
     goto next_state;
   }
   block_print(b, stderr);
+
+  // 2. Depending on the block type, select next state
   switch (block_type(b))
   {
   case NO_MOTION:
@@ -254,6 +261,9 @@ ccnc_state_t ccnc_do_load_block(ccnc_state_data_t *data) {
     break;
   }
 
+  // 3. increment time
+  data->t_tot += tq;
+
 next_state:  
   switch (next_state) {
     case CCNC_STATE_IDLE:
@@ -273,9 +283,14 @@ next_state:
 // valid return states: CCNC_STATE_LOAD_BLOCK
 ccnc_state_t ccnc_do_no_motion(ccnc_state_data_t *data) {
   ccnc_state_t next_state = CCNC_STATE_LOAD_BLOCK;
+  data_t tq = machine_tq(data->machine);
   
+  // Steps:
+  // 1. print block number
+  fprintf(stderr, "No motion in block %zu\n", block_n(program_current(data->prog)));
 
-  /* Your Code Here */
+  // 2. increment time
+  data->t_tot += tq;
   
   switch (next_state) {
     case CCNC_STATE_LOAD_BLOCK:
@@ -294,16 +309,35 @@ ccnc_state_t ccnc_do_no_motion(ccnc_state_data_t *data) {
 ccnc_state_t ccnc_do_rapid_motion(ccnc_state_data_t *data) {
   ccnc_state_t next_state = CCNC_NO_CHANGE;
   data_t tq = machine_tq(data->machine);
+  point_t *pos = machine_position(data->machine);
+  block_t *b = program_current(data->prog);
+
+  // Steps:
+  // 1. sync machine
   machine_sync(data->machine, 1);
-  data->t_tot += tq;
-  data->t_tot += tq;
+
+  // 2. exit state if error is small enough
   if (machine_error(data->machine) < machine_max_error(data->machine)) {
     next_state = CCNC_STATE_LOAD_BLOCK;
   }
+
+  // 3. CRTL-C may be used for skipping over a rapid: reset the global var
   if (_exit_request) {
     _exit_request = 0;
     next_state = CCNC_STATE_LOAD_BLOCK;
   }
+
+  // 4. print position table
+  printf("%lu,%f,%f,%f,%f,%f,%f,%f,%f\n", block_n(b), data->t_tot, data->t_blk, 0.0, 0.0, 0.0, point_x(pos), point_y(pos), point_z(pos));
+
+  // 5. print progress:
+  fprintf(stderr, "\b\b\b\b\b\b\b\b");
+  fflush(stderr);
+  fprintf(stderr, "[%5.1f%%]", machine_error(data->machine) / block_length(b) * 100);
+
+  // 5. increment times
+  data->t_blk += tq;
+  data->t_tot += tq;
   
   switch (next_state) {
     case CCNC_NO_CHANGE:
@@ -331,28 +365,31 @@ ccnc_state_t ccnc_do_interp_motion(ccnc_state_data_t *data) {
   block_t *b = program_current(data->prog);
   point_t *sp = NULL;
 
-  data->t_blk += tq;
-  data->t_tot += tq;
-  if (data->t_blk >= block_dt(b) + tq/10.0) {
-    next_state = CCNC_STATE_LOAD_BLOCK;
-    goto next_state;
-  }
+  // Steps:
+  // 1. calculate lambda and interpolate position
   lambda = block_lambda(b, data->t_blk, &feed);
   sp = block_interpolate(b, lambda);
-  if (!sp) {
-    next_state = CCNC_STATE_LOAD_BLOCK;
-    goto next_state;
-  }
+
+  // 2. print position table
   printf("%lu,%f,%f,%f,%f,%f,%f,%f,%f\n", block_n(b), data->t_tot, data->t_blk, lambda, lambda * block_length(b), feed, point_x(sp), point_y(sp), point_z(sp));
+
+  // 3. print progress percentage
   fprintf(stderr, "\b\b\b\b\b\b\b\b");
   fflush(stderr);
   fprintf(stderr, "[%5.1f%%]", lambda*100);
+
+  // 4. sync machine
   machine_sync(data->machine, 0);
+
+  // 5. check if block is done
+  if (data->t_blk >= block_dt(b) + tq/10.0) {
+    next_state = CCNC_STATE_LOAD_BLOCK;
+  }
   
+  // 6. increment times
+  data->t_blk += tq;
+  data->t_tot += tq;
 
-  /* Your Code Here */
-
-next_state:
   switch (next_state) {
     case CCNC_NO_CHANGE:
     case CCNC_STATE_LOAD_BLOCK:
@@ -409,14 +446,18 @@ void ccnc_begin_rapid(ccnc_state_data_t *data) {
   point_set_y(sp, point_y(target));
   point_set_z(sp, point_z(target));
   machine_sync(data->machine, 1);
+  // 4. print progress
+  fprintf(stderr, "Length: %f\n", block_length(b));
+  fprintf(stderr, "[  0.0%%]");
 }
 
 // This function is called in 1 transition:
 // 1. from load_block to interp_motion
 void ccnc_begin_interp(ccnc_state_data_t *data) {
   // Steps:
-  // reset block timer
+  // 1. reset block timer
   data->t_blk = 0;
+  // 2. print progress
   fprintf(stderr, "[  0.0%%]");
 }
 
@@ -424,13 +465,17 @@ void ccnc_begin_interp(ccnc_state_data_t *data) {
 // 1. from rapid_motion to load_block
 void ccnc_end_rapid(ccnc_state_data_t *data) {
   // Steps:
-  // * call machine_listen_stop()
+  // 1. call machine_listen_stop()
   machine_listen_stop(data->machine);
+  // 2. clean progress
+  fprintf(stderr, "\b\b\b\b\b\b\b\b");
 }
 
 // This function is called in 1 transition:
 // 1. from interp_motion to load_block
 void ccnc_end_interp(ccnc_state_data_t *data) {
+  // Steps:
+  // 1. clean progress
   fprintf(stderr, "\b\b\b\b\b\b\b\b");
 }
 
