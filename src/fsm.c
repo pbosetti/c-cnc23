@@ -340,7 +340,7 @@ ccnc_state_t ccnc_do_rapid_motion(ccnc_state_data_t *data) {
   }
 
   // 4. print position table
-  printf("%lu,%f,%f,%f,%f,%f,%f,%f,%f\n", block_n(b), data->t_tot, data->t_blk, 0.0, 0.0, 0.0, point_x(pos), point_y(pos), point_z(pos));
+  printf("%lu %d %f %f %f %f %f %f %f %f\n", block_n(b), block_type(b), data->t_tot, data->t_blk, 0.0, 0.0, 0.0, point_x(pos), point_y(pos), point_z(pos));
 
   // 5. print progress:
   fprintf(stderr, "\b\b\b\b\b\b\b\b");
@@ -385,7 +385,7 @@ ccnc_state_t ccnc_do_interp_motion(ccnc_state_data_t *data) {
   sp = block_interpolate(b, lambda);
 
   // 2. print position table
-  printf("%lu,%f,%f,%f,%f,%f,%f,%f,%f\n", block_n(b), data->t_tot, data->t_blk, lambda, lambda * block_length(b), feed, point_x(sp), point_y(sp), point_z(sp));
+  printf("%lu %d %f %f %f %f %f %f %f %f\n", block_n(b), block_type(b), data->t_tot, data->t_blk, lambda, lambda * block_length(b), feed, point_x(sp), point_y(sp), point_z(sp));
 
   // 3. print progress percentage
   fprintf(stderr, "\b\b\b\b\b\b\b\b");
@@ -443,7 +443,7 @@ void ccnc_reset(ccnc_state_data_t *data) {
   // 1. reset both timers
   data->t_blk = data->t_tot = 0;
   // 2. print data header line
-  printf("n,t_tot,t_blk,lambda,s,feed,x,y,z\n");
+  printf("n type t_tot t_blk lambda s feed x y z\n");
 }
 
 // This function is called in 1 transition:

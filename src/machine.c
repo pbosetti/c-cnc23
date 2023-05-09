@@ -345,9 +345,9 @@ static void on_message(struct mosquitto *m, void *obj, const struct mosquitto_me
   else if (strcmp(subtopic, "position") == 0) {
     // we get a message as "123.5,0.100,200"
     char *nxt = msg->payload;
-    point_set_x(machine->position, strtod(nxt, &nxt)); // ",0.100,200"
-    point_set_y(machine->position, strtod(nxt + 1, &nxt)); // ",200"
-    point_set_z(machine->position, strtod(nxt + 1, &nxt)); // ""
+    point_set_x(machine->position, strtod(nxt, &nxt) - point_x(machine->offset)); // ",0.100,200"
+    point_set_y(machine->position, strtod(nxt + 1, &nxt) - point_y(machine->offset)); // ",200"
+    point_set_z(machine->position, strtod(nxt + 1, &nxt) - point_z(machine->offset)); // ""
   }
   else {
     eprintf("Got unexpected message on %s\n", msg->topic);
