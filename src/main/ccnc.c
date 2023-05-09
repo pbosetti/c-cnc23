@@ -1,6 +1,7 @@
 #include "../defines.h"
 #include "../fsm.h"
 #include <stdint.h>
+
 #if defined(__linux)
 #define HAVE_POSIX_TIMER
 #include <time.h>
@@ -65,6 +66,8 @@ int main(int argc, char const *argv[]) {
     .prog = NULL
   };
   ccnc_state_t cur_state = CCNC_STATE_INIT;
+  openlog("SM", LOG_PID | LOG_PERROR, LOG_USER);
+  syslog(LOG_INFO, "Starting SM");
   do {
     cur_state = ccnc_run_state(cur_state, &state_data);
     // wait_next(machine_tq(state_data.machine) * 1E9 / machine_rt_pacing(state_data.machine));

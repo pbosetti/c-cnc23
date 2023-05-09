@@ -70,6 +70,11 @@ configure_file(
   ${SOURCE_DIR}/defines.h
 )
 
+option(NO_SYSLOG "Disable use of syslog" ON)
+if(NO_SYSLOG)
+  add_definitions(-DNO_SYSLOG)
+endif()
+
 
 #   _____                    _       
 #  |_   _|_ _ _ __ __ _  ___| |_ ___ 
