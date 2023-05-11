@@ -21,6 +21,13 @@
 // COMMON TYPES
 typedef double data_t;
 
+#ifdef SYSLOG
+#include <syslog.h>
+#else
+#define openlog(...) {}
+#define syslog(...) {}
+#endif
+
 
 // COMMON INLINE FUNCTIONS
 
