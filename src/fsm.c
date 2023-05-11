@@ -209,11 +209,12 @@ ccnc_state_t ccnc_do_stop(ccnc_state_data_t *data) {
   signal(SIGINT, SIG_DFL);
 
   // 1. disconnect
-  wprintf("Clean up...\n");
+  wprintf("Disconnect...\n");
   if (data->machine) {
     machine_disconnect(data->machine);
   }
 
+  wprintf("Clean up...\n");
   // 2. free resources
   if (data->program) {
     program_free(data->program);
@@ -300,6 +301,7 @@ ccnc_state_t ccnc_do_no_motion(ccnc_state_data_t *data) {
   data_t tq = machine_tq(data->machine);
   syslog(LOG_INFO, "[FSM] In state no_motion");
 
+  // Steps:
   // 1. print block number
   fprintf(stderr, "No motion block %zu\n", block_n(program_current(data->program)));
 
@@ -477,7 +479,10 @@ void ccnc_begin_rapid(ccnc_state_data_t *data) {
 // 1. from load_block to interp_motion
 void ccnc_begin_interp(ccnc_state_data_t *data) {
   syslog(LOG_INFO, "[FSM] State transition ccnc_begin_interp");
+  // Steps:
+  // 1. reset block timer
   data->t_blk = 0;
+  // 2. print first progress string
   fprintf(stderr, "[  0.0%%]");
 }
 
@@ -485,14 +490,19 @@ void ccnc_begin_interp(ccnc_state_data_t *data) {
 // 1. from rapid_motion to load_block
 void ccnc_end_rapid(ccnc_state_data_t *data) {
   syslog(LOG_INFO, "[FSM] State transition ccnc_end_rapid");
+  // Steps:
+  // 1. start listening to MQTT
   machine_listen_stop(data->machine);
+  // 2. clean last progress string (8 chars)
   fprintf(stderr, "\b\b\b\b\b\b\b\b");
 }
 
 // This function is called in 1 transition:
 // 1. from interp_motion to load_block
 void ccnc_end_interp(ccnc_state_data_t *data) {
-  /* Your Code Here */
+  // Steps:
+  // 1. clean last progress string (8 chars)
+  fprintf(stderr, "\b\b\b\b\b\b\b\b");
 }
 
 /*  ____  _        _        
