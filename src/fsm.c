@@ -99,11 +99,11 @@ ccnc_state_t ccnc_do_init(ccnc_state_data_t *data) {
   ccnc_state_t next_state = CCNC_STATE_IDLE;
   point_t *sp = NULL, *zero = NULL;
   signal(SIGINT, signal_handler); 
-  
   syslog(LOG_INFO, "[FSM] In state init");
+
   // Steps:
   // 1. print out software version
-  fprintf(stderr, "C-CNC version %s, %s build\n", VERSION, BUILD_TYPE);
+  fprintf(stderr, GRN"C-CNC version %s, %s build\n"CRESET, VERSION, BUILD_TYPE);
 
   // 2. connect to the machine
   data->machine = machine_new(data->ini_file);
@@ -157,11 +157,11 @@ next_state:
 ccnc_state_t ccnc_do_idle(ccnc_state_data_t *data) {
   char key;
   ccnc_state_t next_state = CCNC_NO_CHANGE;
-  
   syslog(LOG_INFO, "[FSM] In state idle");
+
   // Steps:
   // 1. Wait for keypress and command according state transition
-  fprintf(stderr, "Press spacebar to run, 'q' to quit\n");
+  fprintf(stderr, "Press "BGRN"spacebar"CRESET" to run, "BRED"'q'"CRESET" to quit\n");
   key = read_key();
   switch (key)
   {
@@ -201,7 +201,6 @@ ccnc_state_t ccnc_do_idle(ccnc_state_data_t *data) {
 // valid return states: CCNC_NO_CHANGE
 ccnc_state_t ccnc_do_stop(ccnc_state_data_t *data) {
   ccnc_state_t next_state = CCNC_NO_CHANGE;
-  
   syslog(LOG_INFO, "[FSM] In state stop");
   
   // Steps:
