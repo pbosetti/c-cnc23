@@ -8,7 +8,13 @@
     "C_Cpp.default.defines": [
       "STATS_MAIN=1",
       "POINT_MAIN=1"
-    ]
+    ],
+    "files.associations": {
+      "*.h": "c",
+      "*.rmd": "markdown",
+      "*.hh": "c++",
+      "cstdlib": "c"
+    }
   },
   "launch": {
     "version": "0.2.0",

@@ -14,13 +14,6 @@
 #include <assert.h>
 #include <stdio.h>
 
-#ifdef NO_SYSLOG
-#define openlog(...) {}
-#define syslog(a, b, ...) {}
-#else
-#include <syslog.h>
-#endif
-
 // Version string
 #define VERSION "@VERSION@"
 #define BUILD_TYPE "@CMAKE_BUILD_TYPE@"
