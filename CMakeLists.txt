@@ -70,6 +70,11 @@ configure_file(
   ${SOURCE_DIR}/defines.h
 )
 
+# cmake config option for enabling/disabling syslog in FSM
+option(SYSLOG "Enable use of syslog facility" OFF)
+if(SYSLOG)
+  add_definitions(-DSYSLOG)
+endif()
 
 #   _____                    _       
 #  |_   _|_ _ _ __ __ _  ___| |_ ___ 
@@ -117,6 +122,7 @@ target_link_libraries(program m mosquitto)
 # List of targets to install
 list(APPEND TARGETS_LIST
   hello
+  ccnc
   c-cnc c-cnc_static c-cnc_lib
 )
 # Destination directory

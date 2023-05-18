@@ -106,10 +106,12 @@ ccnc_state_t ccnc_do_init(ccnc_state_data_t *data) {
   fprintf(stderr, GRN"C-CNC version %s, %s build\n"CRESET, VERSION, BUILD_TYPE);
 
   // 2. connect to the machine
-  data->machine = machine_new(data->ini_file);
   if (!data->machine) {
-    next_state = CCNC_STATE_STOP;
-    goto next_state;
+    data->machine = machine_new(data->ini_file);
+    if (!data->machine) {
+      next_state = CCNC_STATE_STOP;
+      goto next_state;
+    }
   }
   if (machine_connect(data->machine, NULL) != EXIT_SUCCESS) {
     next_state = CCNC_STATE_STOP;
