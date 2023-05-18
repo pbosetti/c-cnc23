@@ -15,6 +15,7 @@
 #include <sched.h>
 #include <stdlib.h>
 
+
 uint64_t now_ns() {
   static uint64_t is_init = 0;
 #ifdef __APPLE__

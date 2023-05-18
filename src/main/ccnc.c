@@ -2,6 +2,8 @@
 #include "../fsm.h"
 #include <unistd.h>
 #include <sys/time.h>
+#include <sched.h>
+#include <signal.h>
 
 #define INI_FILE "machine.ini"
 
