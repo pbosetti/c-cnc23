@@ -33,6 +33,7 @@ typedef struct machine {
   struct mosquitto *mqt;         // mosquitto object
   struct mosquitto_message *msg; // mosquitto message structure
   int connecting;                // 1 when disconnected or about to connect
+  data_t rt_pacing;                 // real time scaling
 } machine_t;
 
 // Callbacks
@@ -121,6 +122,7 @@ machine_t *machine_new(char const *cfg_path) {
     T_READ_D(d, m, ccnc, A);
     T_READ_D(d, m, ccnc, max_error);
     T_READ_D(d, m, ccnc, tq);
+    T_READ_D(d, m, ccnc, rt_pacing);
     // WP origin
     point = toml_array_in(ccnc, "offset");
     if (!point) {
@@ -196,6 +198,7 @@ machine_getter(data_t, A);
 machine_getter(data_t, tq);
 machine_getter(data_t, max_error);
 machine_getter(data_t, error);
+machine_getter(data_t, rt_pacing);
 machine_getter(point_t *, zero);
 machine_getter(point_t *, setpoint);
 machine_getter(point_t *, position);
@@ -211,6 +214,7 @@ void machine_print_params(machine_t const *m) {
   fprintf(stderr, BBLK "C-CNC:max_error:  " CRESET "%f\n", m->max_error);
   fprintf(stderr, BBLK "C-CNC:zero        " CRESET "[%.3f, %.3f, %.3f]\n", 
     point_x(m->zero), point_y(m->zero), point_z(m->zero));
+  fprintf(stderr, BBLK "C-CNC:rt_pacing:  " CRESET "%f\n", m->rt_pacing);
   fprintf(stderr, BBLK "C-CNC:offset      " CRESET "[%.3f, %.3f, %.3f]\n", 
     point_x(m->offset), point_y(m->offset), point_z(m->offset));
   // MQTT section
