@@ -29,32 +29,42 @@ setup(block);
 function setup(block)
 
 % Register number of ports
-block.NumInputPorts  = 2;
-block.NumOutputPorts = 0;
+block.NumInputPorts  = 0;
+block.NumOutputPorts = 4;
 
 % Setup port properties to be inherited or dynamic
-block.SetPreCompInpPortInfoToDynamic;
-% block.SetPreCompOutPortInfoToDynamic;
+% block.SetPreCompInpPortInfoToDynamic;
+block.SetPreCompOutPortInfoToDynamic;
 
 % Override input port properties
-block.InputPort(1).Dimensions  = 1;
-block.InputPort(1).DatatypeID  = 0;  % double
-block.InputPort(1).Complexity  = 'Real';
-block.InputPort(1).DirectFeedthrough = true;
-
-% Override input port properties
-block.InputPort(2).Dimensions  = 3;
-block.InputPort(2).DatatypeID  = 0;  % double
-block.InputPort(2).Complexity  = 'Real';
-block.InputPort(2).DirectFeedthrough = true;
+%block.InputPort(1).Dimensions  = 1;
+%block.InputPort(1).DatatypeID  = 0;  % double
+%block.InputPort(1).Complexity  = 'Real';
+%block.InputPort(1).DirectFeedthrough = true;
 
 % Override output port properties
-% block.OutputPort(1).Dimensions       = 1;
-% block.OutputPort(1).DatatypeID  = 0; % double
-% block.OutputPort(1).Complexity  = 'Real';
+block.OutputPort(1).Dimensions   = 1;
+block.OutputPort(1).DatatypeID   = 0; % double
+block.OutputPort(1).Complexity   = 'Real';
+block.OutputPort(1).SamplingMode = 'Sample';
+
+block.OutputPort(2).Dimensions   = 1;
+block.OutputPort(2).DatatypeID   = 0; % double
+block.OutputPort(2).Complexity   = 'Real';
+block.OutputPort(2).SamplingMode = 'Sample';
+
+block.OutputPort(3).Dimensions   = 1;
+block.OutputPort(3).DatatypeID   = 0; % double
+block.OutputPort(3).Complexity   = 'Real';
+block.OutputPort(3).SamplingMode = 'Sample';
+
+block.OutputPort(4).Dimensions   = 1;
+block.OutputPort(4).DatatypeID   = 8; % 8 boolean - 3 uint8
+block.OutputPort(4).Complexity   = 'Real';
+block.OutputPort(4).SamplingMode = 'Sample';
 
 % Register parameters
-block.NumDialogPrms     = 1;
+block.NumDialogPrms = 0;
 
 % Register sample times
 %  [0 offset]            : Continuous sample time
@@ -62,7 +72,7 @@ block.NumDialogPrms     = 1;
 %
 %  [-1, 0]               : Inherited sample time
 %  [-2, 0]               : Variable sample time
-block.SampleTimes = [-1 0];
+block.SampleTimes = [0.01 0];
 
 % Specify the block simStateCompliance. The allowed values are:
 %    'UnknownSimState', < The default setting; warn and assume DefaultSimState
@@ -84,7 +94,7 @@ block.SimStateCompliance = 'DefaultSimState';
 block.RegBlockMethod('PostPropagationSetup', @DoPostPropSetup);
 block.RegBlockMethod('InitializeConditions', @InitializeConditions);
 block.RegBlockMethod('Start', @Start);
-% block.RegBlockMethod('Outputs', @Outputs);     % Required
+block.RegBlockMethod('Outputs', @Outputs); % Required
 block.RegBlockMethod('Update', @Update);
 % block.RegBlockMethod('Derivatives', @Derivatives);
 block.RegBlockMethod('Terminate', @Terminate); % Required
@@ -100,10 +110,10 @@ block.RegBlockMethod('Terminate', @Terminate); % Required
 %%
 function DoPostPropSetup(block)
 block.NumDworks = 1;
-  
-block.Dwork(1).Name            = 'broker';
+
+block.Dwork(1).Name            = 'x1';
 block.Dwork(1).Dimensions      = 1;
-block.Dwork(1).DatatypeID      = 0;
+block.Dwork(1).DatatypeID      = 0;      % double
 block.Dwork(1).Complexity      = 'Real'; % real
 block.Dwork(1).UsedAsDiscState = true;
 
@@ -118,7 +128,7 @@ block.Dwork(1).UsedAsDiscState = true;
 %%   C MEX counterpart: mdlInitializeConditions
 %%
 function InitializeConditions(block)
-block.Dwork(1).Data = 0;
+
 %end InitializeConditions
 
 
@@ -131,8 +141,8 @@ block.Dwork(1).Data = 0;
 %%   C MEX counterpart: mdlStart
 %%
 function Start(block)
+
 block.Dwork(1).Data = 0;
-% block.Dwork(1).Data = mqtt(block.DialogPrm(1), block.DialogPrm(2));
 
 %end Start
 
@@ -144,8 +154,10 @@ block.Dwork(1).Data = 0;
 %%   C MEX counterpart: mdlOutputs
 %%
 function Outputs(block)
-
-block.OutputPort(1).Data = block.Dwork(1).Data + block.InputPort(1).Data;
+  block.OutputPort(1).Data = evalin('base','position.x');
+  block.OutputPort(2).Data = evalin('base','position.y');
+  block.OutputPort(3).Data = evalin('base','position.z');
+  block.OutputPort(4).Data = evalin('base','position.rapid');
 
 %end Outputs
 
@@ -157,11 +169,8 @@ block.OutputPort(1).Data = block.Dwork(1).Data + block.InputPort(1).Data;
 %%   C MEX counterpart: mdlUpdate
 %%
 function Update(block)
-block.Dwork(1).Data = block.Dwork(1).Data + 1;
-M = block.DialogPrm(1).Data;
-write(M, 'c-cnc/status/error', num2str(block.InputPort(1).Data(1)));
-pos_msg = sprintf('%f,%f,%f', block.InputPort(2).Data(1)*1000.0, block.InputPort(2).Data(2)*1000.0, block.InputPort(2).Data(3)*1000.0);
-write(M, 'c-cnc/status/position', pos_msg);
+
+% block.Dwork(1).Data = block.InputPort(1).Data;
 
 %end Update
 
@@ -183,6 +192,7 @@ function Derivatives(block)
 %%   C MEX counterpart: mdlTerminate
 %%
 function Terminate(block)
+
 
 
 %end Terminate

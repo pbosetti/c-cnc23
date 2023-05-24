@@ -22,13 +22,19 @@ M = mqttclient('tcp://localhost'); % Broker connection
 % Initialize subscribers
 sub = subscribe(M, 'c-cnc/setpoint', Callback=@get_setpoint); % Subscribe to set-point topic
 
-% Publish first set point
-write(M, 'c-cnc/setpoint', '{"x":0.000,"y":0.000,"z":-100.000,"rapid":false}'); % Set-point init
+% Setpoint publish example 
+% write(M, 'c-cnc/setpoint', '{"x":0.000,"y":0.000,"z":0.000,"rapid":false}'); % Set-point init
 % MQTT JSON message description
 % 1. c-cnc is the root
 % 2. setpoint is the topic
 % 3. {x,y,z,rapid} is the message formatted as x, y and z (set point) and
 %    a rapid movement flag (false=no rapid movement, true=rapid movement).
+
+%% Clear past status (run between one simulazion and the other)
+
+write(M, 'c-cnc/setpoint', '{"x":0.000,"y":0.000,"z":0.000,"rapid":false}'); % Set-point init
+% write(M, 'c-cnc/status/position', '{"x":0.000,"y":0.000,"z":0.000}'); % Position
+% write(M, 'c-cnc/status/error', '{"error":999.999}'); % Set-point
 
 %% Test message
 % Publish dummy set-point messages

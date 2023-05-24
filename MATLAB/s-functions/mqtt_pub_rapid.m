@@ -29,7 +29,7 @@ setup(block);
 function setup(block)
 
 % Register number of ports
-block.NumInputPorts  = 1;
+block.NumInputPorts  = 2;
 block.NumOutputPorts = 0;
 
 % Setup port properties to be inherited or dynamic
@@ -41,6 +41,12 @@ block.InputPort(1).Dimensions  = 1;
 block.InputPort(1).DatatypeID  = 0;  % double
 block.InputPort(1).Complexity  = 'Real';
 block.InputPort(1).DirectFeedthrough = true;
+
+% Override input port properties
+block.InputPort(2).Dimensions  = 3;
+block.InputPort(2).DatatypeID  = 0;  % double
+block.InputPort(2).Complexity  = 'Real';
+block.InputPort(2).DirectFeedthrough = true;
 
 % Override output port properties
 % block.OutputPort(1).Dimensions       = 1;
@@ -56,7 +62,7 @@ block.NumDialogPrms     = 1;
 %
 %  [-1, 0]               : Inherited sample time
 %  [-2, 0]               : Variable sample time
-block.SampleTimes = [0 0];
+block.SampleTimes = [0.01 0];
 
 % Specify the block simStateCompliance. The allowed values are:
 %    'UnknownSimState', < The default setting; warn and assume DefaultSimState
@@ -95,11 +101,11 @@ block.RegBlockMethod('Terminate', @Terminate); % Required
 function DoPostPropSetup(block)
 block.NumDworks = 1;
   
-  block.Dwork(1).Name            = 'broker';
-  block.Dwork(1).Dimensions      = 1;
-  block.Dwork(1).DatatypeID      = 0;
-  block.Dwork(1).Complexity      = 'Real'; % real
-  block.Dwork(1).UsedAsDiscState = true;
+block.Dwork(1).Name            = 'broker';
+block.Dwork(1).Dimensions      = 1;
+block.Dwork(1).DatatypeID      = 0;
+block.Dwork(1).Complexity      = 'Real'; % real
+block.Dwork(1).UsedAsDiscState = true;
 
 
 %%
@@ -153,8 +159,9 @@ block.OutputPort(1).Data = block.Dwork(1).Data + block.InputPort(1).Data;
 function Update(block)
 block.Dwork(1).Data = block.Dwork(1).Data + 1;
 M = block.DialogPrm(1).Data;
-publish(M, '/sp', num2str(block.InputPort(1).Data));
-% block.Dwork(1).Data = block.InputPort(1).Data;
+write(M, 'c-cnc/status/error', num2str(block.InputPort(1).Data(1)*1000.0)); % Position error [m -> mm]
+pos_msg = sprintf('{"x":"%f","y":"%f","z":"%f"}', block.InputPort(2).Data(1)*1000.0, block.InputPort(2).Data(2)*1000.0, block.InputPort(2).Data(3)*1000.0);
+write(M, 'c-cnc/status/position', pos_msg);
 
 %end Update
 
