@@ -22,6 +22,7 @@ typedef struct machine {
   data_t A;                      // max acceleration/deceleration
   data_t tq;                     // sampling time
   data_t max_error, error;       // maximum error and current error
+  data_t fmax;                   // maximum feed rate
   point_t *zero;                 // machine origin
   point_t *setpoint, *position;  // set point and current position
   point_t *offset;               // offset of the workpiece reference frame
@@ -122,6 +123,7 @@ machine_t *machine_new(char const *cfg_path) {
     T_READ_D(d, m, ccnc, A);
     T_READ_D(d, m, ccnc, max_error);
     T_READ_D(d, m, ccnc, tq);
+    T_READ_D(d, m, ccnc, fmax);
     T_READ_D(d, m, ccnc, rt_pacing);
     // WP origin
     point = toml_array_in(ccnc, "offset");
@@ -198,6 +200,7 @@ machine_getter(data_t, A);
 machine_getter(data_t, tq);
 machine_getter(data_t, max_error);
 machine_getter(data_t, error);
+machine_getter(data_t, fmax);
 machine_getter(data_t, rt_pacing);
 machine_getter(point_t *, zero);
 machine_getter(point_t *, setpoint);
@@ -212,6 +215,7 @@ void machine_print_params(machine_t const *m) {
   fprintf(stderr, BBLK "C-CNC:A:          " CRESET "%f\n", m->A);
   fprintf(stderr, BBLK "C-CNC:tq:         " CRESET "%f\n", m->tq);
   fprintf(stderr, BBLK "C-CNC:max_error:  " CRESET "%f\n", m->max_error);
+  fprintf(stderr, BBLK "C-CNC:fmax:       " CRESET "%f\n", m->fmax);
   fprintf(stderr, BBLK "C-CNC:zero        " CRESET "[%.3f, %.3f, %.3f]\n", 
     point_x(m->zero), point_y(m->zero), point_z(m->zero));
   fprintf(stderr, BBLK "C-CNC:rt_pacing:  " CRESET "%f\n", m->rt_pacing);

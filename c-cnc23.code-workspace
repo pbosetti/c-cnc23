@@ -44,6 +44,14 @@
         "program": "${workspaceFolder}/build/program",
         "args": ["test.gcode", "machine.ini"],
         "cwd": "${workspaceFolder}"
+      },
+      {
+        "type": "lldb",
+        "request": "launch",
+        "name": "ex1",
+        "program": "${workspaceFolder}/build/ex1",
+        "args": ["test.gcode", "10"],
+        "cwd": "${workspaceFolder}"
       }
     ],
     "compounds": []

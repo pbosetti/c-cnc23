@@ -329,7 +329,11 @@ static int block_set_fields(block_t *b, char cmd, char *arg) {
     b->r = atof(arg);
     break;
   case 'F':
-    b->feedrate = atof(arg);
+    if (strcmp(arg, "MAX") == 0) {
+      b->feedrate = machine_fmax(b->machine);
+    } else {
+      b->feedrate = MIN(atof(arg), machine_fmax(b->machine));
+    }
     break;
   case 'S':
     b->spindle = atof(arg);

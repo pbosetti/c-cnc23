@@ -16,6 +16,7 @@ digraph "C-CNC" {
   rapid_motion
   interp_motion
   stop [peripheries=2]
+  go_to_zero
 
   # List of transitions
   # Add a label if you want a transition function
@@ -33,4 +34,7 @@ digraph "C-CNC" {
   interp_motion -> load_block [label="end_interp"]
   load_block -> idle
   idle -> stop
+  idle -> go_to_zero [label="begin_zero"]
+  go_to_zero -> go_to_zero
+  go_to_zero -> idle [label="end_zero"]
 }

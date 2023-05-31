@@ -112,6 +112,13 @@ target_link_libraries(machine m mosquitto)
 target_link_libraries(block m mosquitto)
 target_link_libraries(program m mosquitto)
 
+# Exercises
+add_executable(ex1 ${SOURCE_DIR}/main/ex1.c)
+target_link_libraries(ex1 m)
+
+add_executable(ex5 ${SOURCE_DIR}/main/ex5.c)
+target_link_libraries(ex5 m mosquitto c-cnc_static)
+
 
 #   _____           _        _ _ 
 #  |_   _|         | |      | | |
