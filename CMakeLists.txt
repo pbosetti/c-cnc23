@@ -117,7 +117,7 @@ add_executable(ex1 ${SOURCE_DIR}/main/ex1.c)
 target_link_libraries(ex1 m)
 
 add_executable(ex5 ${SOURCE_DIR}/main/ex5.c)
-target_link_libraries(ex5 m mosquitto c-cnc_static)
+target_link_libraries(ex5 c-cnc_static m mosquitto)
 
 
 #   _____           _        _ _ 
