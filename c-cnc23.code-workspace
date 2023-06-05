@@ -52,6 +52,14 @@
         "program": "${workspaceFolder}/build/ex1",
         "args": ["test.gcode", "10"],
         "cwd": "${workspaceFolder}"
+      },
+      {
+        "type": "lldb",
+        "request": "launch",
+        "name": "axis",
+        "program": "${workspaceFolder}/build/axis",
+        "args": [],
+        "cwd": "${workspaceFolder}"
       }
     ],
     "compounds": []

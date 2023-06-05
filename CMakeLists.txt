@@ -84,6 +84,8 @@ endif()
 #                 |___/              
 # Libraries
 # All files in /src (except src/main) are compiled into a library
+add_compile_options(-pthread)
+
 add_library(c-cnc_lib SHARED ${LIB_SOURCES})
 add_library(c-cnc_static STATIC ${LIB_SOURCES})
 
@@ -98,6 +100,11 @@ target_compile_definitions(block PUBLIC BLOCK_MAIN)
 target_compile_definitions(machine PUBLIC MACHINE_MAIN)
 add_executable(program ${LIB_SOURCES})
 target_compile_definitions(program PUBLIC PROGRAM_MAIN)
+
+add_executable(axis ${LIB_SOURCES})
+target_compile_definitions(axis PUBLIC AXIS_MAIN)
+target_link_libraries(axis c-cnc_static m mosquitto)
+
 
 add_executable(c-cnc ${SOURCE_DIR}/main/c-cnc.c)
 target_link_libraries(c-cnc c-cnc_static m mosquitto)
