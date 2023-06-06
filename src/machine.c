@@ -258,11 +258,11 @@ int machine_sync(machine_t *m, int rapid) {
   assert(m && m->mqt);
   // Fill up m->pub_buffer with the set point in JSON format
   // {"x":100.2, "y":123, "z":0.0, "rapid":false}
-  snprintf(m->pub_buffer, BUFLEN, "{\"x\":%f, \"y\":%f, \"z\":%f, \"rapid\":%s}",
+  snprintf(m->pub_buffer, BUFLEN, "{\"x\":%f, \"y\":%f, \"z\":%f, \"rapid\":%d}",
     point_x(m->setpoint) + point_x(m->offset),
     point_y(m->setpoint) + point_y(m->offset),
     point_z(m->setpoint) + point_z(m->offset),
-    rapid ? "true" : "false"
+    rapid ? 1 : 0
   );
   // send the buffer:
   if (mosquitto_publish(m->mqt, NULL, m->pub_topic, strlen(m->pub_buffer), m->pub_buffer, 0, 0) != MOSQ_ERR_SUCCESS) {
@@ -337,7 +337,7 @@ static void on_message(struct mosquitto *m, void *obj, const struct mosquitto_me
   // the last one:
   // e.g.: "c-cnc/status/error" -> "/error", + 1 -> "error"
   char *subtopic = strrchr(msg->topic, '/') + 1;
-  fprintf(stderr, "<- message: %s:%s\n", msg->topic, (char *)msg->payload);
+  // fprintf(stderr, "<- message: %s:%s\n", msg->topic, (char *)msg->payload);
 
   // make a copy of the message for storing it into machine
   mosquitto_message_copy(machine->msg, msg);

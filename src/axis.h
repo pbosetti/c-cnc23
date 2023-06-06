@@ -30,6 +30,7 @@ int axis_running(axis_t const *b);
 
 void axis_set_torque(axis_t *b, data_t value);
 void axis_set_setpoint(axis_t *b, data_t value);
+void axis_set_i(axis_t *b, data_t value);
 
 // Dynamics
 void axis_reset(axis_t *axis, data_t position);

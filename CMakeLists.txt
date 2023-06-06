@@ -87,37 +87,44 @@ endif()
 add_compile_options(-pthread)
 
 add_library(c-cnc_lib SHARED ${LIB_SOURCES})
+target_link_libraries(c-cnc_lib m mosquitto)
 add_library(c-cnc_static STATIC ${LIB_SOURCES})
 
-# Executables
-add_executable(hello ${SOURCE_DIR}/main/hello.c)
+# Test executables
 add_executable(point ${SOURCE_DIR}/point.c)
 target_compile_definitions(point PUBLIC POINT_MAIN)
+target_link_libraries(point m)
+
 add_executable(machine ${LIB_SOURCES})
 target_compile_definitions(machine PUBLIC MACHINE_MAIN)
+target_link_libraries(machine m mosquitto)
+
 add_executable(block ${LIB_SOURCES})
 target_compile_definitions(block PUBLIC BLOCK_MAIN)
-target_compile_definitions(machine PUBLIC MACHINE_MAIN)
+target_link_libraries(block m mosquitto)
+
 add_executable(program ${LIB_SOURCES})
 target_compile_definitions(program PUBLIC PROGRAM_MAIN)
+target_link_libraries(program m mosquitto)
 
-add_executable(axis ${LIB_SOURCES})
-target_compile_definitions(axis PUBLIC AXIS_MAIN)
-target_link_libraries(axis c-cnc_static m mosquitto)
+# Tuning axes PID
+add_executable(tuning ${LIB_SOURCES})
+target_compile_definitions(tuning PUBLIC AXIS_MAIN)
+target_link_libraries(tuning c-cnc_static m mosquitto)
 
+# main programs
+add_executable(hello ${SOURCE_DIR}/main/hello.c)
+target_link_libraries(hello c-cnc_lib mosquitto)
 
 add_executable(c-cnc ${SOURCE_DIR}/main/c-cnc.c)
 target_link_libraries(c-cnc c-cnc_static m mosquitto)
-add_executable(ccnc ${SOURCE_DIR}/main/ccnc.c)
-target_link_libraries(ccnc c-cnc_static m mosquitto)
 
-# Linking
-target_link_libraries(hello c-cnc_lib mosquitto)
-target_link_libraries(c-cnc_lib m mosquitto)
-target_link_libraries(point m)
-target_link_libraries(machine m mosquitto)
-target_link_libraries(block m mosquitto)
-target_link_libraries(program m mosquitto)
+add_executable(ccnc ${SOURCE_DIR}/main/ccnc.c)
+target_link_libraries(ccnc c-cnc_lib m mosquitto)
+
+add_executable(simulate ${SOURCE_DIR}/main/simulate.c)
+target_link_libraries(simulate c-cnc_lib m mosquitto)
+
 
 # Exercises
 add_executable(ex1 ${SOURCE_DIR}/main/ex1.c)

@@ -175,6 +175,7 @@ axis_getter(int, running);
 // Setters
 axis_setter(data_t, torque);
 axis_setter(data_t, setpoint);
+axis_setter(data_t, i);
 
 //   ____                              _
 //  |  _ \ _   _ _ __   __ _ _ __ ___ (_) ___ ___
@@ -265,6 +266,7 @@ void axis_stop(axis_t *axis) {
 //  |_|  |_|\__,_|_|_| |_|
 
 #ifdef AXIS_MAIN
+
 int main(int argc, char const **argv) {
   // data_t dt = 0.005;
   // data_t time = 0;
