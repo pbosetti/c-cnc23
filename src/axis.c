@@ -6,6 +6,7 @@
 
 #include "axis.h"
 #include "toml.h"
+#include <ctype.h>
 #include <math.h>
 #include <pthread.h>
 #include <signal.h>
@@ -274,6 +275,27 @@ int main(int argc, char const **argv) {
   axis_t *ay = axis_new("machine.ini", "Y");
   axis_t *az = axis_new("machine.ini", "Z");
   axis_t *a;
+  if (argc != 3) {
+    eprintf("Usage: %s <seconds> <X|Y|Z>\n", argv[0]);
+    exit(EXIT_FAILURE);
+  }
+  switch (toupper(argv[2][0]))
+  {
+  case 'X':
+    a = ax;
+    break;
+  case 'Y':
+    a = ay;
+    break;
+  case 'Z':
+    a = az;
+    break;
+  default:
+    eprintf("Wrong axis %c\n", argv[2][0]);
+    exit(EXIT_FAILURE);
+    break;
+  }
+
   if (!ax || !ay || ! az) {
     exit(EXIT_FAILURE);
   }
@@ -293,7 +315,7 @@ int main(int argc, char const **argv) {
   axis_run(ax);
   axis_run(ay);
   axis_run(az);
-  a = ax;
+
   fprintf(stderr, "axis %s: p %.3f i %.3f d %.3f\n", a->name, a->p, a->i, a->d);
   while (a->time < atof(argv[1])) {
     if (a->time < 1) {

@@ -126,6 +126,42 @@ The command `cmake --build build -t install` (or `cmake --install build`) also i
 
 You are suggested to run `export PATH=$PATH:$PWD/products_host/bin` once per session, so that you can simply run a program by typing its name (e.g. `ini_test`).
 
+## Simulator
+
+The files `src/axis.c`, `src/axis.h` and `src/main/simulate.c` implement a simulator for the cartesian machine tool. Each axis is implemented as a first order system whose state variables are position and speed. A forward Euler integration scheme is adopted for solving the corresponding system of ODEs. Tne simulator runs a dynamics simulation for each axis in parallel in three separate threads, and uses MQTT to get the setpoint from the `ccnc` executable and to reply with the current machine error.
+
+The compilation also produces the executable `tuning`, which can be used for tuning PID parameters for each axis.
+
+### Usage of simulator
+
+You will need two different terminals. In the forst terminal, start by running the simulator. The command takes an optional argument, which is the name of a log file where the data stream will be saved. 
+ ```sh
+build/simulate log.txt
+ ```
+
+In the second terminal, run the controller as usual:
+```sh
+build/ccnc test.gcode > /dev/null
+```
+
+**NOTE:** the simulator starts logging as soon as the G-code program is run ("press spacebar") and goes on until you press CRTL-C on the simulator window: as soon as the program run terminates (in the controller), stop the simulator to avoid creating unnecessarily large log files.
+
+The log file can be used for plotting the trajectory and for comparing the actual trajectory (columns `sy` vs. `sx`) with the nominal one (columns `y` vs. `x`). 
+
+### Usage of tuning program
+
+The tuning program shows the response of the axis to a step change that is applied 1 s after the start, for a time span equal to the first argument (in seconds). The second argument selects the axis: `X`, `Y`, or `Z` (case insensitive).
+
+You can use it for tuning the PID parameters of one axis at a time, iteratively creating a log file (to be plotter with GNUplot or Matlab):
+```sh
+build/tuning 4 z > axis.txt
+``` 
+
+### Exercise
+
+The current PID settings for the X axis are not ideal. This is apparent if you compare the actual trajectory with the nominal one, where you can see small overshoot in the X direction on corners. Try to reduce this effect by better tuning PID parameters for the X axis in `machine.ini`.
+
+
 
 ## Author
 
