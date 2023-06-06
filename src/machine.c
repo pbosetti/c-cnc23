@@ -231,7 +231,6 @@ void machine_print_params(machine_t const *m) {
 
 int machine_connect(machine_t *m, machine_on_message callback) {
   assert(m);
-  int count = 0;
   m->mqt = mosquitto_new(NULL, 1, m);
   if (!m->mqt) {
     perror(BRED"Could not create MQTT"CRESET);
@@ -239,17 +238,10 @@ int machine_connect(machine_t *m, machine_on_message callback) {
   }
   mosquitto_connect_callback_set(m->mqt, on_connect);
   mosquitto_message_callback_set(m->mqt, callback ? callback : on_message);
+  mosquitto_loop_start(m->mqt);
   if (mosquitto_connect(m->mqt, m->broker_address, m->broker_port, 10) != MOSQ_ERR_SUCCESS) {
     perror(BRED"Invalid broker connection parameters"CRESET);
     return EXIT_FAILURE;
-  }
-  // wait for the connection to be established
-  while (m->connecting) {
-    wprintf("loop: %d\n", mosquitto_loop(m->mqt, -1, 1));
-    if (++count >= 5) {
-      eprintf("Could not connect to broker\n");
-      return EXIT_FAILURE;
-    }
   }
   return EXIT_SUCCESS;
 }
@@ -258,19 +250,16 @@ int machine_sync(machine_t *m, int rapid) {
   assert(m && m->mqt);
   // Fill up m->pub_buffer with the set point in JSON format
   // {"x":100.2, "y":123, "z":0.0, "rapid":false}
-  snprintf(m->pub_buffer, BUFLEN, "{\"x\":%f, \"y\":%f, \"z\":%f, \"rapid\":%s}",
+  snprintf(m->pub_buffer, BUFLEN, "{\"x\":%f, \"y\":%f, \"z\":%f, \"rapid\":%d}",
     point_x(m->setpoint) + point_x(m->offset),
     point_y(m->setpoint) + point_y(m->offset),
     point_z(m->setpoint) + point_z(m->offset),
-    rapid ? "true" : "false"
+    rapid ? 1 : 0
   );
   // send the buffer:
   if (mosquitto_publish(m->mqt, NULL, m->pub_topic, strlen(m->pub_buffer), m->pub_buffer, 0, 0) != MOSQ_ERR_SUCCESS) {
     perror(BRED"Could not sent message"CRESET);
     return EXIT_FAILURE;
-  }
-  if(mosquitto_loop(m->mqt, 0, 1) != MOSQ_ERR_SUCCESS) {
-    perror(BRED"mosquitto_loop error"CRESET);
   }
   return EXIT_SUCCESS;
 }
@@ -282,7 +271,7 @@ int machine_listen_start(machine_t *m) {
     return EXIT_FAILURE;
   }
   m->error = m->max_error * 10.0;
-  wprintf("Subscribed to topic %s\n", m->sub_topic);
+  // wprintf("Subscribed to topic %s\n", m->sub_topic);
   return EXIT_SUCCESS;
 }
 
@@ -292,16 +281,16 @@ int machine_listen_stop(machine_t *m) {
     perror(BRED"Could not unsubscribe"CRESET);
     return EXIT_FAILURE;
   }
-  wprintf("Unsubscribed from topic %s\n", m->sub_topic);
+  // wprintf("Unsubscribed from topic %s\n", m->sub_topic);
   return EXIT_SUCCESS;
 }
 
 void machine_disconnect(machine_t *m) {
   assert(m && m->mqt);
   while (mosquitto_want_write(m->mqt)) {
-    mosquitto_loop(m->mqt, 0, 1);
     usleep(10000);
   }
+  mosquitto_loop_stop(m->mqt, 1);
   mosquitto_disconnect(m->mqt);
   m->connecting = 1;
 }
@@ -315,7 +304,7 @@ static void on_connect(struct mosquitto *mqt, void *obj, int rc) {
   machine_t *m = (machine_t *)obj;
   // check rc: if CONNACK_ACCEPTED, then the connection succeeded
   if (rc == CONNACK_ACCEPTED) {
-    wprintf("-> Connected to %s:%d\n", m->broker_address, m->broker_port);
+    wprintf("-> Connected to %s:%d\n\r", m->broker_address, m->broker_port);
     // subscribe to topic
     if (mosquitto_subscribe(mqt, NULL, m->sub_topic, 0) != MOSQ_ERR_SUCCESS) {
       perror("Could not subsccribe");
@@ -337,7 +326,7 @@ static void on_message(struct mosquitto *m, void *obj, const struct mosquitto_me
   // the last one:
   // e.g.: "c-cnc/status/error" -> "/error", + 1 -> "error"
   char *subtopic = strrchr(msg->topic, '/') + 1;
-  fprintf(stderr, "<- message: %s:%s\n", msg->topic, (char *)msg->payload);
+  // fprintf(stderr, "<- message: %s:%s\n", msg->topic, (char *)msg->payload);
 
   // make a copy of the message for storing it into machine
   mosquitto_message_copy(machine->msg, msg);
