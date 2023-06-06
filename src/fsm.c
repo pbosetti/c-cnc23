@@ -17,6 +17,8 @@ Functions and types have been generated with prefix "ccnc_"
 #include <stdio.h>
 #include <termios.h> // setting terminal attributes
 #include <unistd.h>
+#include <math.h>
+#include <sys/param.h>
 #include "defines.h"
 #include "fsm.h"
 #include "block.h"
@@ -200,6 +202,8 @@ ccnc_state_t ccnc_do_idle(ccnc_state_data_t *data) {
 
   // 2. Reset times
   data->t_blk = data->t_tot = 0;
+
+  machine_sync(data->machine, 1);
 
   switch (next_state) {
   case CCNC_NO_CHANGE:
@@ -425,10 +429,11 @@ ccnc_state_t ccnc_do_rapid_motion(ccnc_state_data_t *data) {
          point_z(pos));
 
   // 5.  print progress percentage
-  fprintf(stderr, "\b\b\b\b\b\b\b\b");
-  fflush(stderr);
-  fprintf(stderr, "[%5.1f%%]",
-          (1 - machine_error(data->machine) / block_length(b)) * 100);
+  // fprintf(stderr, "\b\b\b\b\b\b\b\b");
+  // fflush(stderr);
+  fprintf(stderr, "\r[%5.1f%%]", fabs(
+              1.0 - MIN(machine_error(data->machine) / block_length(b), 1.0)) *
+              100);
 
   // 6. increment times
   data->t_blk += tq;
@@ -573,7 +578,7 @@ void ccnc_begin_rapid(ccnc_state_data_t *data) {
   machine_sync(data->machine, 1);
 
   // 4. Print INITIAL value for progress string (8 chars)
-  fprintf(stderr, "Rapid block length: %f\n", block_length(b));
+  // fprintf(stderr, "Rapid block length: %f\n", block_length(b));
   fprintf(stderr, "[  0.0%%]");
 }
 

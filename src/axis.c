@@ -293,7 +293,8 @@ int main(int argc, char const **argv) {
   axis_run(ax);
   axis_run(ay);
   axis_run(az);
-  a = az;
+  a = ax;
+  fprintf(stderr, "axis %s: p %.3f i %.3f d %.3f\n", a->name, a->p, a->i, a->d);
   while (a->time < atof(argv[1])) {
     if (a->time < 1) {
       axis_set_setpoint(a, 0);

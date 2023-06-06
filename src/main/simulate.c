@@ -29,6 +29,7 @@ typedef struct {
   struct mosquitto *mqtt;
   int connecting;
   int rapid;
+  int program_run;
 } sim_t;
 
 // empty signal handler
@@ -43,7 +44,7 @@ sim_t *sim_new(char *ini_path) {
   sim_t *sim = malloc(sizeof(sim_t));
   memset(sim, 0, sizeof(*sim));
   sim->connecting = 1;
-  sim->rapid = 1;
+  sim->rapid = 0;
 
   // init axes
   sim->ax = axis_new(ini_path, "X");
@@ -140,6 +141,7 @@ static void on_message(struct mosquitto *m, void *obj,
   sim_t *sim = (sim_t *)obj;
   char *substr = NULL;
   data_t x, y, z;
+  sim->program_run = 1;
   if (strcmp(msg->topic, sim->sub_topic) == 0) {
     substr = strchr(msg->payload, 'x');
     x = atof(substr + 3) / 1000.0;
@@ -239,8 +241,13 @@ int main(int argc, char const *argv[]) {
   axis_reset(ax, 0);
   axis_reset(ay, 0);
   axis_reset(az, 0);
+  axis_set_setpoint(ax, 0);
+  axis_set_setpoint(ay, 0);
+  axis_set_setpoint(az, 0);
 
-#define LOG_HEADER "t qx sx x vx qy sy y vy qz sz z vz\n"
+#define LOG_HEADER                                                             \
+  "        t        qx        sx        x         vx        qy        sy     " \
+  "   y         vy        qz        sz        z         vz        d  r\n"
   printf(LOG_HEADER);
   if (logfile) {
     fprintf(logfile, LOG_HEADER);
@@ -262,15 +269,14 @@ int main(int argc, char const *argv[]) {
     y = axis_position(ay) * 1000;
     z = axis_position(az) * 1000;
     delta = sqrt(pow(x - sx, 2) + pow(y - sy, 2) + pow(z - sz, 2));
-    sprintf(payload, "%f", delta);
     printf("\r");
-    printf("%f " RED "%9.3f %9.3f %9.3f %9.3f " GRN
+    printf("%9.4f " RED "%9.3f %9.3f %9.3f %9.3f " GRN
            "%9.3f %9.3f %9.3f %9.3f " BLU "%9.3f %9.3f %9.3f %9.3f" YEL
            " %9.3f" CRESET " %c",
            axis_time(ax), axis_torque(ax), sx, x, axis_speed(ax),
            axis_torque(ay), sy, y, axis_speed(ay), axis_torque(az), sz, z,
            axis_speed(az), delta, sim->rapid ? 'R' : 'I');
-    if (logfile) {
+    if (logfile && sim->program_run) {
       fprintf(logfile,
               "%f %9.3f %9.3f %9.3f %9.3f %9.3f %9.3f %9.3f %9.3f %9.3f %9.3f "
               "%9.3f %9.3f %9.3f %c\n",
@@ -279,7 +285,8 @@ int main(int argc, char const *argv[]) {
               axis_speed(az), delta, sim->rapid ? 'R' : 'I');
     }
     fflush(stdout);
-    if (sim->rapid) {
+    if (sim->rapid && sim->program_run) {
+      sprintf(payload, "%f", delta);
       mosquitto_publish(sim->mqtt, NULL, sim->pub_topic_err, strlen(payload),
                         payload, 0, 0);
       sprintf(payload, "%f,%f,%f", x, y, z);

@@ -13,7 +13,9 @@
       "*.h": "c",
       "*.rmd": "markdown",
       "*.hh": "c++",
-      "__node_handle": "c"
+      "__node_handle": "c",
+      "cmath": "c",
+      "complex": "c"
     }
   },
   "launch": {
