@@ -131,10 +131,23 @@ You are suggested to run `export PATH=$PATH:$PWD/products_host/bin` once per ses
 The files `src/axis.c`, `src/axis.h` and `src/main/simulate.c` implement a simulator for the cartesian machine tool. Each axis is implemented as a first order system whose state variables are position and speed. A forward Euler integration scheme is adopted for solving the corresponding system of ODEs. Tne simulator runs a dynamics simulation for each axis in parallel in three separate threads, and uses MQTT to get the setpoint from the `ccnc` executable and to reply with the current machine error.
 
 For a single axis, the equation of dynamics is:
-$$\frac{d}{dt}\underbar{x} = \underbar{\underbar{A}} \cdot\underbar x $$
-where the status vector $\underbar x$ and the matrix $\underbar{\underbar A}$ are:
-$$\underbar x = \begin{bmatrix} x\\ v\\ f\end{bmatrix} $$
-$$\underbar{\underbar A} = \begin{bmatrix}0&1&0\\ 0&-c/m&1/m\\ 0&0&0\end{bmatrix}$$
+$$\frac{d}{dt}\mathbf x = \mathbf{A} \cdot\mathbf x $$
+where the status vector $\mathbf x$ and the matrix $\mathbf{A}$ are:
+
+$$\mathbf x = \begin{bmatrix} 
+  x\\ 
+  v\\ 
+  f
+  \end{bmatrix} 
+$$
+
+$$\mathbf{A} = \begin{bmatrix}
+  0&1&0\\ 
+  0&-c/m&1/m\\ 
+  0&0&0
+  \end{bmatrix}
+$$
+
 and where $x$ is the position, $v$ is the speed, $f$ is the applied force, $c$ is the damping coeffiient and $m$ is the movable mass.
 
 The forward Euler integration scheme gives:
