@@ -285,7 +285,7 @@ int main(int argc, char const *argv[]) {
               axis_speed(az), delta, sim->rapid ? 'R' : 'I');
     }
     fflush(stdout);
-    if (sim->rapid && sim->program_run) {
+    if (sim->program_run) {
       sprintf(payload, "%f", delta);
       mosquitto_publish(sim->mqtt, NULL, sim->pub_topic_err, strlen(payload),
                         payload, 0, 0);
